@@ -9,20 +9,92 @@
         }
         
         body { margin: 0; background: black; overflow: hidden; }
-        canvas { 
-            width: 100vw; 
-            height: 100vh; 
+        
+        /* Wrap canvas in a container to handle rounded corners better */
+        .crt-container {
             position: relative;
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
+            border-radius: 20px;
+            transform: perspective(1000px) rotateX(2deg);
         }
         
-        /* Add CRT overlay */
-        canvas::after {
-            content: "";
+        canvas { 
+            width: 100%;
+            height: 100%;
+            position: relative;
+            box-shadow: 
+                inset 0 0 100px rgba(0,0,0,0.5),
+                0 0 50px rgba(0,0,0,0.5);
+        }
+        
+        /* Enhanced glass reflection with moving highlight */
+        .crt-overlay {
             position: fixed;
             top: 0;
             left: 0;
-            width: 100%;
-            height: 100%;
+            right: 0;
+            bottom: 0;
+            border-radius: 20px;
+            overflow: hidden;
+            pointer-events: none;
+            z-index: 2;
+            background: 
+                /* Static reflections */
+                radial-gradient(
+                    circle at 50% 50%,
+                    rgba(255,255,255,0) 0%,
+                    rgba(255,255,255,0.03) 40%,
+                    rgba(255,255,255,0) 100%
+                ),
+                /* Main highlight */
+                radial-gradient(
+                    ellipse at 50% 5%,
+                    rgba(255,255,255,0.2) 0%,
+                    rgba(255,255,255,0.1) 20%,
+                    rgba(255,255,255,0) 50%
+                ),
+                /* Bottom edge highlight */
+                radial-gradient(
+                    ellipse at 50% 95%,
+                    rgba(255,255,255,0.1) 0%,
+                    rgba(255,255,255,0.05) 10%,
+                    rgba(255,255,255,0) 30%
+                ),
+                /* Side reflection */
+                linear-gradient(
+                    160deg,
+                    rgba(255,255,255,0.03) 0%,
+                    rgba(255,255,255,0.1) 30%,
+                    rgba(255,255,255,0) 60%
+                );
+        }
+        
+        /* Enhanced screen curvature */
+        .crt-curve {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            border-radius: 20px;
+            background: radial-gradient(
+                circle at 50% 50%,
+                rgba(0,0,0,0) 50%,
+                rgba(0,0,0,0.3) 100%
+            );
+            pointer-events: none;
+            z-index: 1;
+        }
+        
+        /* Adjust scanline overlay */
+        .scanlines {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
             background: repeating-linear-gradient(
                 0deg,
                 rgba(0, 0, 0, 0.15),
@@ -31,14 +103,8 @@
                 transparent 2px
             );
             pointer-events: none;
-        }
-        
-        /* Add subtle screen curvature */
-        canvas {
             border-radius: 20px;
-            box-shadow: 
-                inset 0 0 100px rgba(0,0,0,0.5),
-                0 0 50px rgba(0,0,0,0.5);
+            z-index: 1;
         }
         
         #demoText {
@@ -67,7 +133,12 @@
     <script src="https://warpdesign.github.io/modplayer-js/js/modplayer.js"></script>
 </head>
 <body>
-    <canvas id="demoCanvas"></canvas>
+    <div class="crt-container">
+        <canvas id="demoCanvas"></canvas>
+        <div class="crt-overlay"></div>
+        <div class="crt-curve"></div>
+        <div class="scanlines"></div>
+    </div>
     <div id="demoText">-=PiRATE MiND STATiON=-................--==<<[ GREETINGS TO: FAIRLIGHT - PARADOX - RAZOR 1911 - QUARTEX ]>>==--..........</div>
     <script src="demo.js"></script>
 </body>
