@@ -37,6 +37,14 @@ const fragmentShader = `
         vec3 color2 = vec3(0.0, 0.7, 0.7);  // Cyan
         vec3 finalColor = mix(color1, color2, v * 0.5 + 0.5);
         
+        // Add scanline effect
+        float scanline = sin(gl_FragCoord.y * 0.7) * 0.15;
+        finalColor = finalColor * (0.85 + scanline);
+        
+        // Add slight vignette effect
+        float vignette = length(vec2(0.5, 0.5) - uv) * 0.5;
+        finalColor = finalColor * (1.0 - vignette);
+
         gl_FragColor = vec4(finalColor, 1.0);
     }
 `;

@@ -9,7 +9,38 @@
         }
         
         body { margin: 0; background: black; overflow: hidden; }
-        canvas { width: 100vw; height: 100vh; }
+        canvas { 
+            width: 100vw; 
+            height: 100vh; 
+            position: relative;
+        }
+        
+        /* Add CRT overlay */
+        canvas::after {
+            content: "";
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: repeating-linear-gradient(
+                0deg,
+                rgba(0, 0, 0, 0.15),
+                rgba(0, 0, 0, 0.15) 1px,
+                transparent 1px,
+                transparent 2px
+            );
+            pointer-events: none;
+        }
+        
+        /* Add subtle screen curvature */
+        canvas {
+            border-radius: 20px;
+            box-shadow: 
+                inset 0 0 100px rgba(0,0,0,0.5),
+                0 0 50px rgba(0,0,0,0.5);
+        }
+        
         #demoText {
             position: fixed;
             top: 50%;
