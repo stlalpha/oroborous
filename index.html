@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Amiga Demo</title>
+    <style>
+        @font-face {
+            font-family: 'Topaz';
+            src: url('TopazPlus_a1200_v1.0.ttf') format('truetype');
+        }
+        
+        body { margin: 0; background: black; overflow: hidden; }
+        canvas { width: 100vw; height: 100vh; }
+        #demoText {
+            position: fixed;
+            top: 50%;
+            left: 0;
+            color: #fff;
+            font-family: 'Topaz', monospace;
+            font-size: 32px;
+            text-shadow: 
+                2px 2px 0 #ff00ff,
+                4px 4px 0 #00ffff;
+            pointer-events: none;
+            white-space: nowrap;
+            letter-spacing: 2px;
+            font-weight: normal;
+        }
+        #demoText span {
+            position: absolute;
+            display: inline-block;
+        }
+    </style>
+    <script src="https://js.mod.land/libs/libopenmpt/libopenmpt.js"></script>
+    <script src="https://js.mod.land/libs/libopenmpt/libopenmpt.wasm.js"></script>
+    <script src="https://warpdesign.github.io/modplayer-js/js/mod-processor.js"></script>
+    <script src="https://warpdesign.github.io/modplayer-js/js/modplayer.js"></script>
+</head>
+<body>
+    <canvas id="demoCanvas"></canvas>
+    <div id="demoText">-=PiRATE MiND STATiON=-................--==<<[ GREETINGS TO: FAIRLIGHT - PARADOX - RAZOR 1911 - QUARTEX ]>>==--..........</div>
+    <script src="demo.js"></script>
+</body>
+</html> 
