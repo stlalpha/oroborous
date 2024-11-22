@@ -8,6 +8,7 @@ A WebGL demo that recreates the classic Amiga demo scene style with modern web t
 - CRT screen effect with proper 4:3 aspect ratio
 - Responsive design that maintains aspect ratio
 - (Coming Soon) MOD music player
+- (Coming Soon) so many effects
 
 ## Setup
 1. Clone the repository
@@ -17,4 +18,3 @@ A WebGL demo that recreates the classic Amiga demo scene style with modern web t
    ```
 3. Open `http://localhost:8000` in your browser
 
-## Project Structure
