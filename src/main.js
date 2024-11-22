@@ -11,6 +11,9 @@ class Demo {
                 this.plasma = new PlasmaEffect('demoCanvas');
                 this.scroller = new TextScroller('demoText');
                 this.init();
+                
+                // Add resize handler
+                window.addEventListener('resize', this.handleResize.bind(this));
             }).catch(error => {
                 console.error('Font loading error:', error);
                 this.showErrorMessage('Font loading failed');
@@ -18,6 +21,17 @@ class Demo {
         } catch (error) {
             console.error('Error initializing demo:', error);
             this.showErrorMessage(error.message);
+        }
+    }
+
+    handleResize() {
+        // Update scroller boundaries
+        if (this.scroller) {
+            this.scroller.updateBounds();
+        }
+        // Update plasma canvas size if needed
+        if (this.plasma) {
+            this.plasma.resize();
         }
     }
 

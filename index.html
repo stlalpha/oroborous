@@ -23,14 +23,15 @@
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%) perspective(1000px) rotateX(2deg);
-            width: 100vw;
-            height: 100vh;
-            max-width: calc(100vw - 40px);  /* Add padding for rounded corners */
-            max-height: calc(100vh - 40px);  /* Add padding for rounded corners */
+            width: calc((100vh - 40px) * 4/3);
+            height: calc(100vh - 40px);
+            max-width: calc(100vw - 40px);
+            max-height: calc((100vw - 40px) * 3/4);
             overflow: hidden;
             border-radius: 20px;
             background: black;
             box-shadow: 0 0 50px rgba(0,0,0,0.5);
+            aspect-ratio: 4/3;
         }
         
         canvas { 
@@ -40,6 +41,7 @@
             top: 0;
             left: 0;
             border-radius: 20px;
+            aspect-ratio: 4/3;
         }
         
         .crt-overlay {
