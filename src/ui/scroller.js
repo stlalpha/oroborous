@@ -15,6 +15,7 @@ export class TextScroller {
         this.text.split('').forEach((char) => {
             const span = document.createElement('span');
             span.textContent = char;
+            span.style.transition = 'opacity 0.2s';  // Add smooth opacity transition
             this.element.appendChild(span);
         });
 
@@ -22,25 +23,34 @@ export class TextScroller {
         const crtContainer = document.querySelector('.crt-container');
         const crtRect = crtContainer.getBoundingClientRect();
         
-        // Start at the right edge of the CRT container
-        this.textPos = crtRect.right - crtRect.left;
-        
-        // Store CRT bounds for reuse
+        // Calculate the actual visible area within the CRT container
+        const padding = 20;
+        const fadeZone = 30; // Width of the fade in/out zone
         this.crtBounds = {
-            left: crtRect.left,
-            right: crtRect.right,
-            width: crtRect.width
+            left: padding,
+            right: crtRect.width - padding,
+            width: crtRect.width - (padding * 2),
+            fadeZone: fadeZone
         };
+
+        // Position the text container relative to CRT container
+        this.element.style.left = `${crtRect.left}px`;
+        
+        // Start at the right edge of the visible area
+        this.textPos = this.crtBounds.right;
     }
 
     update(timestamp) {
-        if (!this.crtBounds) return;  // Wait for initialization
+        if (!this.crtBounds) return;
         
         this.textPos -= 2;
         
-        // Reset when text is completely off the left edge of CRT
-        if (this.textPos < -(this.text.length * 30)) {
-            this.textPos = this.crtBounds.width;
+        // Calculate the total width of the text
+        const textWidth = this.text.length * 30;
+        
+        // Reset when the entire text has moved past the left boundary
+        if (this.textPos < this.crtBounds.left - textWidth) {
+            this.textPos = this.crtBounds.right;
         }
 
         Array.from(this.element.children).forEach((span, index) => {
@@ -51,13 +61,25 @@ export class TextScroller {
             // Position relative to CRT container
             span.style.transform = `translate(${xPos}px, ${sineWave}px)`;
             
-            // Hide characters outside CRT bounds
-            const charPos = xPos;
-            if (charPos < 0 || charPos > this.crtBounds.width) {
-                span.style.opacity = '0';
-            } else {
-                span.style.opacity = '1';
+            // Calculate opacity based on position
+            let opacity = 1;
+            
+            // Fade in from right
+            if (xPos > this.crtBounds.right - this.crtBounds.fadeZone) {
+                opacity = 1 - ((xPos - (this.crtBounds.right - this.crtBounds.fadeZone)) / this.crtBounds.fadeZone);
             }
+            // Fade out to left
+            else if (xPos < this.crtBounds.left + this.crtBounds.fadeZone) {
+                opacity = (xPos - this.crtBounds.left) / this.crtBounds.fadeZone;
+            }
+            
+            // Ensure character is completely hidden outside bounds
+            if (xPos < this.crtBounds.left || xPos > this.crtBounds.right) {
+                opacity = 0;
+            }
+            
+            // Apply opacity
+            span.style.opacity = Math.max(0, Math.min(1, opacity));
         });
     }
 } 
