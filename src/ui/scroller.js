@@ -3,7 +3,6 @@ export class TextScroller {
         this.element = document.getElementById(elementId);
         this.text = this.element.textContent;
         
-        // Wait for font to load before initializing
         document.fonts.ready.then(() => {
             this.init();
         });
@@ -38,20 +37,9 @@ export class TextScroller {
             fadeZone: fadeZone
         };
 
-        // Position the text container relative to CRT container
-        this.element.style.left = `${crtRect.left}px`;
-        
-        // Adjust text position if it's outside bounds after resize
-        if (this.textPos) {
-            const textWidth = this.text.length * 30;
-            if (this.textPos > this.crtBounds.right) {
-                this.textPos = this.crtBounds.right;
-            } else if (this.textPos < this.crtBounds.left - textWidth) {
-                this.textPos = this.crtBounds.right;
-            }
-        } else {
-            // Initial position
-            this.textPos = this.crtBounds.right;
+        // Start position should be outside the right edge of the CRT
+        if (!this.textPos) {
+            this.textPos = crtRect.width + 800;
         }
     }
 
@@ -63,9 +51,9 @@ export class TextScroller {
         // Calculate the total width of the text
         const textWidth = this.text.length * 30;
         
-        // Reset when the entire text has moved past the left boundary
-        if (this.textPos < this.crtBounds.left - textWidth) {
-            this.textPos = this.crtBounds.right;
+        // Reset when the entire text has moved past the left edge
+        if (this.textPos + textWidth < -800) {
+            this.textPos = this.crtBounds.right + 800;
         }
 
         Array.from(this.element.children).forEach((span, index) => {
@@ -73,7 +61,7 @@ export class TextScroller {
             const xPos = this.textPos + offset;
             const sineWave = Math.sin((timestamp * 0.003) + (index * 0.2)) * 50;
             
-            // Position relative to CRT container
+            // Always update position for smooth movement
             span.style.transform = `translate(${xPos}px, ${sineWave}px)`;
             
             // Calculate opacity based on position
@@ -93,7 +81,7 @@ export class TextScroller {
                 opacity = 0;
             }
             
-            // Apply opacity
+            // Apply opacity with smooth transition
             span.style.opacity = Math.max(0, Math.min(1, opacity));
         });
     }
