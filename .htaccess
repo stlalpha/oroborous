@@ -1,0 +1,7 @@
+# Serve .wasm files with the correct MIME type
+AddType application/wasm .wasm
+
+# Enable CORS if needed
+<FilesMatch "\.(wasm|js|mod)$">
+    Header set Access-Control-Allow-Origin "*"
+</FilesMatch> 
