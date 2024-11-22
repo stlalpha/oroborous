@@ -15,17 +15,22 @@ export class TextScroller {
         this.text.split('').forEach((char) => {
             const span = document.createElement('span');
             span.textContent = char;
-            span.style.transition = 'opacity 0.2s';  // Add smooth opacity transition
+            span.style.transition = 'opacity 0.2s';
             this.element.appendChild(span);
         });
 
+        this.updateBounds();
+    }
+
+    updateBounds() {
         // Get CRT container bounds
         const crtContainer = document.querySelector('.crt-container');
         const crtRect = crtContainer.getBoundingClientRect();
         
         // Calculate the actual visible area within the CRT container
         const padding = 20;
-        const fadeZone = 30; // Width of the fade in/out zone
+        const fadeZone = 30;
+        
         this.crtBounds = {
             left: padding,
             right: crtRect.width - padding,
@@ -36,8 +41,18 @@ export class TextScroller {
         // Position the text container relative to CRT container
         this.element.style.left = `${crtRect.left}px`;
         
-        // Start at the right edge of the visible area
-        this.textPos = this.crtBounds.right;
+        // Adjust text position if it's outside bounds after resize
+        if (this.textPos) {
+            const textWidth = this.text.length * 30;
+            if (this.textPos > this.crtBounds.right) {
+                this.textPos = this.crtBounds.right;
+            } else if (this.textPos < this.crtBounds.left - textWidth) {
+                this.textPos = this.crtBounds.right;
+            }
+        } else {
+            // Initial position
+            this.textPos = this.crtBounds.right;
+        }
     }
 
     update(timestamp) {
