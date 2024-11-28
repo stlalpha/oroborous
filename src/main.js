@@ -2,10 +2,17 @@ console.log('🚀 main.js loaded');
 
 import { PlasmaEffect } from './effects/plasma.js';
 import { TextScroller } from './ui/scroller.js';
+import { AudioManager } from './audio/audioManager.js';
 
 class Demo {
     constructor() {
         try {
+            // Initialize audio manager immediately
+            this.audioManager = new AudioManager();
+            
+            // Load and set up background music
+            this.setupBackgroundMusic();
+
             // Wait for font to load before initializing
             document.fonts.ready.then(() => {
                 this.plasma = new PlasmaEffect('demoCanvas');
@@ -56,10 +63,34 @@ class Demo {
 
     async init() {
         try {
+            this.setupAudioControls();
             this.animate();
         } catch (error) {
             console.error('Error in demo init:', error);
             this.showErrorMessage(error.message);
+        }
+    }
+
+    setupAudioControls() {
+        const toggleButton = document.getElementById('toggleMusic');
+        const volumeSlider = document.getElementById('volumeSlider');
+
+        if (toggleButton) {
+            toggleButton.addEventListener('click', () => {
+                if (this.audioManager.isPlaying) {
+                    this.audioManager.pause();
+                    toggleButton.textContent = '🔈 Toggle Music';
+                } else {
+                    this.audioManager.play();
+                    toggleButton.textContent = '🔊 Toggle Music';
+                }
+            });
+        }
+
+        if (volumeSlider) {
+            volumeSlider.addEventListener('input', (e) => {
+                this.audioManager.setVolume(e.target.value / 100);
+            });
         }
     }
 
@@ -68,6 +99,16 @@ class Demo {
             this.plasma.render(timestamp);
             this.scroller.update(timestamp);
             requestAnimationFrame((ts) => this.animate(ts));
+        }
+    }
+
+    async setupBackgroundMusic() {
+        try {
+            // You can put your music file in a public assets folder
+            await this.audioManager.loadTrack('/assets/music/background-track.mp3');
+            this.audioManager.setVolume(0.7); // Set initial volume to 70%
+        } catch (error) {
+            console.error('Error loading background music:', error);
         }
     }
 }
