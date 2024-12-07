@@ -124,11 +124,12 @@ class Demo {
         if (!this.plasma || !this.copperBars) return;
         
         try {
+            // First transition: plasma to copper bars
             this.plasma.fadeOut();
-            await new Promise(resolve => setTimeout(resolve, 500));
+            await new Promise(resolve => setTimeout(resolve, 2000));
             this.copperBars.fadeIn();
             
-            // Add automatic transition to vector balls after 10 seconds
+            // Wait before transitioning to vector balls
             setTimeout(() => {
                 this.transitionToVectorBalls();
             }, 10000);
@@ -141,7 +142,7 @@ class Demo {
         if (!this.copperBars || !this.vectorBalls) return;
         
         this.copperBars.fadeOut();
-        await new Promise(resolve => setTimeout(resolve, 500));
+        await new Promise(resolve => setTimeout(resolve, 2000));
         this.vectorBalls.fadeIn();
     }
 }

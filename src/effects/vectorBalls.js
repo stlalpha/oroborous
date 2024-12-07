@@ -64,26 +64,29 @@ export class VectorBalls {
                 };
             },
             dodecahedron: (time, ball) => {
-                const phi = (1 + Math.sqrt(5)) / 2; // Golden ratio
+                const phi = (1 + Math.sqrt(5)) / 2;
                 const size = 150;
                 
-                // 20 vertices of a dodecahedron
+                // Properly defined vertices
                 const vertices = [
-                    [±1, ±1, ±1],
-                    [0, ±(1/phi), ±phi],
-                    [±phi, 0, ±(1/phi)],
-                    [±(1/phi), ±phi, 0]
-                ].flat().map(v => v * size);
+                    [-1, -1, -1], [1, -1, -1], [1, 1, -1], [-1, 1, -1],
+                    [-1, -1, 1], [1, -1, 1], [1, 1, 1], [-1, 1, 1],
+                    [0, -phi, -1/phi], [0, phi, -1/phi],
+                    [0, -phi, 1/phi], [0, phi, 1/phi],
+                    [-1/phi, 0, -phi], [1/phi, 0, -phi],
+                    [-1/phi, 0, phi], [1/phi, 0, phi],
+                    [-phi, -1/phi, 0], [-phi, 1/phi, 0],
+                    [phi, -1/phi, 0], [phi, 1/phi, 0]
+                ].map(v => v.map(coord => coord * size));
 
-                const vertexIndex = Math.floor(ball.phase / (Math.PI * 2) * 20);
+                const vertexIndex = Math.floor(ball.phase / (Math.PI * 2) * vertices.length);
                 const rot = time * 0.7;
                 
-                // Get vertex position
-                const x = vertices[vertexIndex * 3];
-                const y = vertices[vertexIndex * 3 + 1];
-                const z = vertices[vertexIndex * 3 + 2];
+                const vertex = vertices[vertexIndex];
+                const x = vertex[0];
+                const y = vertex[1];
+                const z = vertex[2];
 
-                // Apply rotation
                 return {
                     x: x * Math.cos(rot) - z * Math.sin(rot),
                     y: y,
