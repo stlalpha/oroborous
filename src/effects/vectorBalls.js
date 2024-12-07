@@ -36,20 +36,15 @@ export class VectorBalls {
         }
         
         this.patterns = {
-            figure8: (time, ball) => ({
-                x: Math.sin(time * 1.4 + ball.phase) * 200,
-                y: Math.sin(time * 2.8 + ball.phase) * 100,
-                z: Math.cos(time * 1.4 + ball.phase) * 200
-            }),
             circle: (time, ball) => ({
                 x: Math.cos(time * 1.4 + ball.phase) * 200,
                 y: Math.sin(time * 1.4 + ball.phase) * 200,
                 z: Math.sin(time * 2.8 + ball.phase) * 100
             }),
-            spiral: (time, ball) => ({
-                x: Math.cos(time * 1.4 + ball.phase) * (100 + ball.phase * 10),
-                y: Math.sin(time * 1.4 + ball.phase) * (100 + ball.phase * 10),
-                z: Math.cos(time * 2.8 + ball.phase) * 150
+            figure8: (time, ball) => ({
+                x: Math.sin(time * 1.4 + ball.phase) * 200,
+                y: Math.sin(time * 2.8 + ball.phase) * 100,
+                z: Math.cos(time * 1.4 + ball.phase) * 200
             }),
             dna: (time, ball) => ({
                 x: Math.cos(time + ball.phase) * 150,
@@ -85,12 +80,13 @@ export class VectorBalls {
             }
         };
 
-        this.currentPattern = 'figure8';
+        this.currentPattern = 'circle';
         this.nextPattern = 'circle';
-        this.morphProgress = 0;
+        this.morphProgress = 1;
         this.morphDuration = 2;
         this.patternDuration = 5;
-        this.lastPatternChange = 0;
+        this.lastPatternChange = -this.patternDuration;
+        this.isFirstTransition = true;
         
         this.sphereGradient = this.createSphereGradient(80);
         this.resize();
@@ -133,6 +129,13 @@ export class VectorBalls {
         this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
 
         if (time - this.lastPatternChange > this.patternDuration) {
+            if (this.isFirstTransition) {
+                this.morphDuration = 3;
+                this.isFirstTransition = false;
+            } else {
+                this.morphDuration = 2;
+            }
+            
             this.morphProgress = 0;
             this.currentPattern = this.nextPattern;
             this.nextPattern = this.getNextPattern();
@@ -174,9 +177,14 @@ export class VectorBalls {
     }
 
     getNextPattern() {
+        if (this.isFirstTransition) {
+            return 'figure8';
+        }
+        
         const patterns = Object.keys(this.patterns);
         const currentIndex = patterns.indexOf(this.currentPattern);
-        return patterns[(currentIndex + 1) % patterns.length];
+        const nextIndex = (currentIndex + 1) % patterns.length;
+        return patterns[nextIndex];
     }
 
     fadeIn(duration = 2000) {

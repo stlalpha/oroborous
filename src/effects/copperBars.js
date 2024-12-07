@@ -27,15 +27,18 @@ export class CopperBars {
             
             // Bar properties
             this.bars = [];
-            for (let i = 0; i < 5; i++) {
+            const numBars = 24;
+            const spacing = 30;
+            
+            for (let i = 0; i < numBars; i++) {
                 this.bars.push({
-                    y: i * 80,
+                    y: i * spacing,
                     speed: 2.5 + (Math.random() * 3),
-                    width: 60,
-                    hue: i * 72,
+                    width: 25,
+                    hue: (i * 360 / numBars) % 360,
                     direction: Math.random() > 0.5 ? 1 : -1,
                     timeOffset: Math.random() * Math.PI * 2,
-                    amplitude: 30 + Math.random() * 40
+                    amplitude: 20 + Math.random() * 30
                 });
             }
 
