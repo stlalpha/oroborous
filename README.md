@@ -1,20 +1,45 @@
 # Amiga-Style Demo
 
-A WebGL demo that recreates the classic Amiga demo scene style with modern web technologies.
+A modern web recreation of classic Amiga demoscene effects, featuring:
+
+## Effects
+- Plasma effect with WebGL shaders
+- Copper bars with dynamic movement
+- Vector balls with morphing patterns
+- Sinus scroller text
+- CRT screen simulation
 
 ## Features
-- Plasma effect using WebGL shaders
-- Sinus scroller with classic Amiga font
-- CRT screen effect with proper 4:3 aspect ratio
-- Responsive design that maintains aspect ratio
-- (Coming Soon) MOD music player
-- (Coming Soon) so many effects
+- Automatic transitions between effects
+- Keyboard controls:
+  - 'N' key: Trigger next effect
+  - 'B' key: Switch to vector balls
+- Audio support with background music
+- Authentic Amiga Topaz font
+- CRT screen effects (scanlines, curve, overlay)
+
+## Technical Details
+- Pure JavaScript with no external dependencies
+- WebGL for plasma effect
+- Canvas-based rendering for copper bars and vector balls
+- CSS for CRT effects
+- Web Audio API for music playback
+
+## Vector Ball Patterns
+- Circle formation
+- Infinity symbol
+- Rotating cube
+- Dodecahedron
 
 ## Setup
 1. Clone the repository
-2. Serve with any HTTP server, for example:
-   ```bash
-   python -m http.server 8000
-   ```
-3. Open `http://localhost:8000` in your browser
+2. Serve with any static file server
+3. Open in a modern browser
+
+## Browser Support
+Requires a browser with WebGL and Web Audio API support.
+
+## Credits
+- Font: Topaz (Amiga system font)
+- Inspired by classic Amiga demos
 
