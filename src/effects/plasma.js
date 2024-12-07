@@ -2,21 +2,32 @@ import { amigaPalette } from '../utils/amigaPalette.js';
 
 export class PlasmaEffect {
     constructor(canvasId) {
-        this.canvas = document.getElementById(canvasId);
-        if (!this.canvas) {
+        // Main display canvas
+        this.displayCanvas = document.getElementById(canvasId);
+        if (!this.displayCanvas) {
             throw new Error(`Canvas with id ${canvasId} not found`);
         }
 
-        this.gl = this.canvas.getContext('webgl');
+        // Create buffer canvas
+        this.bufferCanvas = document.createElement('canvas');
+        this.bufferCanvas.width = window.innerWidth;
+        this.bufferCanvas.height = window.innerHeight;
+
+        // Set up WebGL on buffer canvas
+        this.gl = this.bufferCanvas.getContext('webgl');
         if (!this.gl) {
             throw new Error('WebGL not supported');
         }
 
+        // Setup display canvas
+        this.displayCtx = this.displayCanvas.getContext('2d');
+        this.displayCanvas.style.transition = 'opacity 2s ease-in-out';
+        this.displayCanvas.style.opacity = '1';
+        
         this.program = null;
         this.uniforms = {};
-        this.opacity = 1.0;
-        this.canvas.style.opacity = '1';
-        this.canvas.style.transition = 'opacity 2s';
+        this.isRendering = true;
+        
         this.init();
     }
 
@@ -33,9 +44,16 @@ export class PlasmaEffect {
     }
 
     resize() {
-        this.canvas.width = window.innerWidth;
-        this.canvas.height = window.innerHeight;
-        this.gl.viewport(0, 0, this.canvas.width, this.canvas.height);
+        const width = window.innerWidth;
+        const height = window.innerHeight;
+        
+        // Resize both canvases
+        this.displayCanvas.width = width;
+        this.displayCanvas.height = height;
+        this.bufferCanvas.width = width;
+        this.bufferCanvas.height = height;
+        
+        this.gl.viewport(0, 0, width, height);
     }
 
     initShaders() {
@@ -124,29 +142,35 @@ export class PlasmaEffect {
         };
     }
 
-    fadeOut(duration = 2000) {
-        console.log('🟪 Plasma fadeOut called');
-        const currentOpacity = this.canvas.style.opacity;
-        this.canvas.style.opacity = '0';
-        console.log('🟪 Plasma opacity changed from', currentOpacity, 'to', this.canvas.style.opacity);
+    fadeOut() {
+        this.displayCanvas.style.opacity = '0';
+        setTimeout(() => {
+            this.isRendering = false;
+        }, 2000);
     }
 
-    fadeIn(duration = 2000) {
-        this.canvas.style.opacity = '1';
+    fadeIn() {
+        this.isRendering = true;
+        // Start rendering to buffer
+        requestAnimationFrame(() => {
+            // Ensure we have a frame rendered before showing
+            this.render(performance.now());
+            requestAnimationFrame(() => {
+                this.displayCanvas.style.opacity = '1';
+            });
+        });
     }
 
     render(time) {
-        const opacity = parseFloat(this.canvas.style.opacity);
-        console.log('🟪 Plasma render:', {
-            opacity,
-            time,
-            visible: opacity > 0
-        });
+        if (!this.isRendering) return;
+
+        // Render to buffer
+        this.gl.uniform1f(this.uniforms.time, time * 0.001);
+        this.gl.uniform2f(this.uniforms.resolution, this.bufferCanvas.width, this.bufferCanvas.height);
+        this.gl.drawArrays(this.gl.TRIANGLE_STRIP, 0, 4);
         
-        if (opacity > 0) {
-            this.gl.uniform1f(this.uniforms.time, time * 0.001);
-            this.gl.uniform2f(this.uniforms.resolution, this.canvas.width, this.canvas.height);
-            this.gl.drawArrays(this.gl.TRIANGLE_STRIP, 0, 4);
-        }
+        // Copy to display canvas
+        this.displayCtx.clearRect(0, 0, this.displayCanvas.width, this.displayCanvas.height);
+        this.displayCtx.drawImage(this.bufferCanvas, 0, 0);
     }
 } 
