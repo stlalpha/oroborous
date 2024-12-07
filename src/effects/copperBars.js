@@ -1,3 +1,5 @@
+import { amigaPalette } from '../utils/amigaPalette.js';
+
 export class CopperBars {
     constructor(canvasId) {
         console.log('🟧 CopperBars constructor start');

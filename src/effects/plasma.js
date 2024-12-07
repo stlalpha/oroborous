@@ -1,3 +1,5 @@
+import { amigaPalette } from '../utils/amigaPalette.js';
+
 export class PlasmaEffect {
     constructor(canvasId) {
         this.canvas = document.getElementById(canvasId);

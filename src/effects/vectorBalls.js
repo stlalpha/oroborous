@@ -1,3 +1,5 @@
+import { amigaPalette } from '../utils/amigaPalette.js';
+
 export class VectorBalls {
     constructor(canvasId) {
         this.canvas = document.createElement('canvas');
@@ -113,16 +115,27 @@ export class VectorBalls {
         gradCanvas.height = size * 2;
         const ctx = gradCanvas.getContext('2d');
         
+        // Set color limit for vector balls effect
+        amigaPalette.setMaxColors(32);
+        
+        // Create gradient with Amiga-compatible colors
         const gradient = ctx.createRadialGradient(
             size, size, 0,
             size, size, size
         );
         
-        gradient.addColorStop(0, 'rgba(255, 255, 255, 1)');
-        gradient.addColorStop(0.3, 'rgba(200, 200, 255, 0.95)');
-        gradient.addColorStop(0.5, 'rgba(100, 100, 220, 0.85)');
-        gradient.addColorStop(0.7, 'rgba(50, 50, 180, 0.75)');
-        gradient.addColorStop(1, 'rgba(20, 20, 90, 0)');
+        // Convert colors to Amiga palette
+        const color1 = amigaPalette.nearestColor(255, 255, 255);
+        const color2 = amigaPalette.nearestColor(200, 200, 255);
+        const color3 = amigaPalette.nearestColor(100, 100, 220);
+        const color4 = amigaPalette.nearestColor(50, 50, 180);
+        const color5 = amigaPalette.nearestColor(20, 20, 90);
+        
+        gradient.addColorStop(0, amigaPalette.getRGBString(color1));
+        gradient.addColorStop(0.3, `rgba(${color2.r}, ${color2.g}, ${color2.b}, 0.95)`);
+        gradient.addColorStop(0.5, `rgba(${color3.r}, ${color3.g}, ${color3.b}, 0.85)`);
+        gradient.addColorStop(0.7, `rgba(${color4.r}, ${color4.g}, ${color4.b}, 0.75)`);
+        gradient.addColorStop(1, `rgba(${color5.r}, ${color5.g}, ${color5.b}, 0)`);
         
         ctx.fillStyle = gradient;
         ctx.fillRect(0, 0, size * 2, size * 2);
@@ -142,6 +155,11 @@ export class VectorBalls {
 
         const time = timestamp * 0.001;
         this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+
+        // Set background color to nearest Amiga color if needed
+        // const bgColor = amigaPalette.nearestColor(0, 0, 0);
+        // this.ctx.fillStyle = amigaPalette.getRGBString(bgColor);
+        // this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
 
         if (time - this.lastPatternChange > this.patternDuration) {
             if (this.isFirstTransition) {
@@ -176,7 +194,8 @@ export class VectorBalls {
             const y = this.centerY + ball.y * perspective;
             const radius = ball.radius * perspective;
             
-            this.ctx.globalAlpha = 0.85 + (ball.z / 400);
+            // Limit alpha to steps that would have been possible on Amiga
+            this.ctx.globalAlpha = Math.round((0.85 + (ball.z / 400)) * 16) / 16;
             this.ctx.drawImage(
                 this.sphereGradient,
                 x - radius,
