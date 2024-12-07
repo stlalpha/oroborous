@@ -4,24 +4,41 @@ console.log('📦 Importing modules...');
 import { PlasmaEffect } from './effects/plasma.js';
 import { TextScroller } from './ui/scroller.js';
 import { AudioManager } from './audio/audioManager.js';
+import { CopperBars } from './effects/copperBars.js';
+import { VectorBalls } from './effects/vectorBalls.js';
 console.log('📦 Modules imported successfully');
+
+// Add immediate debug
+console.log('🔍 CopperBars class available:', typeof CopperBars);
 
 class Demo {
     constructor() {
         try {
             // Initialize audio manager immediately
             this.audioManager = new AudioManager();
-            
-            // Load and set up background music
             this.setupBackgroundMusic();
 
             // Wait for font to load before initializing
             document.fonts.ready.then(() => {
                 this.plasma = new PlasmaEffect('demoCanvas');
                 this.scroller = new TextScroller('demoText');
-                this.init();
+                this.copperBars = new CopperBars('copperCanvas');
+                this.vectorBalls = new VectorBalls('vectorBallsCanvas');
                 
-                // Add resize handler
+                // Setup transition triggers
+                document.addEventListener('keydown', (e) => {
+                    if (e.key.toLowerCase() === 'n') {
+                        this.transitionEffects();
+                    }
+                    if (e.key.toLowerCase() === 'b') {
+                        this.transitionToVectorBalls();
+                    }
+                });
+
+                // Auto transition after 15 seconds
+                setTimeout(() => this.transitionEffects(), 15000);
+                
+                this.init();
                 window.addEventListener('resize', this.handleResize.bind(this));
             }).catch(error => {
                 console.error('Font loading error:', error);
@@ -41,6 +58,12 @@ class Demo {
         // Update plasma canvas size if needed
         if (this.plasma) {
             this.plasma.resize();
+        }
+        if (this.copperBars) {
+            this.copperBars.resize();
+        }
+        if (this.vectorBalls) {
+            this.vectorBalls.resize();
         }
     }
 
@@ -88,11 +111,38 @@ class Demo {
     }
 
     animate(timestamp) {
-        if (this.plasma && this.scroller) {
+        if (this.plasma && this.scroller && this.copperBars && this.vectorBalls) {
             this.plasma.render(timestamp);
             this.scroller.update(timestamp);
+            this.copperBars.render(timestamp);
+            this.vectorBalls.render(timestamp);
             requestAnimationFrame((ts) => this.animate(ts));
         }
+    }
+
+    async transitionEffects() {
+        if (!this.plasma || !this.copperBars) return;
+        
+        try {
+            this.plasma.fadeOut();
+            await new Promise(resolve => setTimeout(resolve, 500));
+            this.copperBars.fadeIn();
+            
+            // Add automatic transition to vector balls after 10 seconds
+            setTimeout(() => {
+                this.transitionToVectorBalls();
+            }, 10000);
+        } catch (error) {
+            console.error('Error during transition:', error);
+        }
+    }
+
+    async transitionToVectorBalls() {
+        if (!this.copperBars || !this.vectorBalls) return;
+        
+        this.copperBars.fadeOut();
+        await new Promise(resolve => setTimeout(resolve, 500));
+        this.vectorBalls.fadeIn();
     }
 }
 

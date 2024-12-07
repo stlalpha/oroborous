@@ -12,6 +12,9 @@ export class PlasmaEffect {
 
         this.program = null;
         this.uniforms = {};
+        this.opacity = 1.0;
+        this.canvas.style.opacity = '1';
+        this.canvas.style.transition = 'opacity 2s';
         this.init();
     }
 
@@ -119,10 +122,29 @@ export class PlasmaEffect {
         };
     }
 
+    fadeOut(duration = 2000) {
+        console.log('🟪 Plasma fadeOut called');
+        const currentOpacity = this.canvas.style.opacity;
+        this.canvas.style.opacity = '0';
+        console.log('🟪 Plasma opacity changed from', currentOpacity, 'to', this.canvas.style.opacity);
+    }
+
+    fadeIn(duration = 2000) {
+        this.canvas.style.opacity = '1';
+    }
+
     render(time) {
-        time *= 0.001;
-        this.gl.uniform1f(this.uniforms.time, time);
-        this.gl.uniform2f(this.uniforms.resolution, this.canvas.width, this.canvas.height);
-        this.gl.drawArrays(this.gl.TRIANGLE_STRIP, 0, 4);
+        const opacity = parseFloat(this.canvas.style.opacity);
+        console.log('🟪 Plasma render:', {
+            opacity,
+            time,
+            visible: opacity > 0
+        });
+        
+        if (opacity > 0) {
+            this.gl.uniform1f(this.uniforms.time, time * 0.001);
+            this.gl.uniform2f(this.uniforms.resolution, this.canvas.width, this.canvas.height);
+            this.gl.drawArrays(this.gl.TRIANGLE_STRIP, 0, 4);
+        }
     }
 } 
