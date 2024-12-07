@@ -41,21 +41,15 @@ export class VectorBalls {
                 y: Math.sin(time * 1.4 + ball.phase) * 200,
                 z: Math.sin(time * 2.8 + ball.phase) * 100
             }),
-            figure8: (time, ball) => ({
-                x: Math.sin(time * 1.4 + ball.phase) * 200,
-                y: Math.sin(time * 2.8 + ball.phase) * 100,
-                z: Math.cos(time * 1.4 + ball.phase) * 200
-            }),
-            dna: (time, ball) => ({
-                x: Math.cos(time + ball.phase) * 150,
-                y: ball.phase * 40 - 400 + (time * 100 % 800),
-                z: Math.sin(time + ball.phase) * 150
-            }),
-            wave: (time, ball) => ({
-                x: (ball.phase * 50) - 600,
-                y: Math.sin(time * 2 + ball.phase * 2) * 100,
-                z: Math.cos(time * 3 + ball.phase) * 150
-            }),
+            infinity: (time, ball) => {
+                const t = time * 1.4 + ball.phase;
+                const scale = 200;
+                return {
+                    x: scale * Math.sin(t) / (1 + Math.cos(t) * Math.cos(t)),
+                    y: scale * Math.sin(t) * Math.cos(t) / (1 + Math.cos(t) * Math.cos(t)),
+                    z: Math.cos(time * 2 + ball.phase) * 150
+                };
+            },
             cube: (time, ball) => {
                 const size = 150;
                 const cornerIndex = Math.floor(ball.phase / (Math.PI * 2) * 8);
@@ -69,13 +63,31 @@ export class VectorBalls {
                     z: x * Math.sin(rot) + z * Math.cos(rot)
                 };
             },
-            infinity: (time, ball) => {
-                const t = time * 1.4 + ball.phase;
-                const scale = 200;
+            dodecahedron: (time, ball) => {
+                const phi = (1 + Math.sqrt(5)) / 2; // Golden ratio
+                const size = 150;
+                
+                // 20 vertices of a dodecahedron
+                const vertices = [
+                    [±1, ±1, ±1],
+                    [0, ±(1/phi), ±phi],
+                    [±phi, 0, ±(1/phi)],
+                    [±(1/phi), ±phi, 0]
+                ].flat().map(v => v * size);
+
+                const vertexIndex = Math.floor(ball.phase / (Math.PI * 2) * 20);
+                const rot = time * 0.7;
+                
+                // Get vertex position
+                const x = vertices[vertexIndex * 3];
+                const y = vertices[vertexIndex * 3 + 1];
+                const z = vertices[vertexIndex * 3 + 2];
+
+                // Apply rotation
                 return {
-                    x: scale * Math.sin(t) / (1 + Math.cos(t) * Math.cos(t)),
-                    y: scale * Math.sin(t) * Math.cos(t) / (1 + Math.cos(t) * Math.cos(t)),
-                    z: Math.cos(time * 2 + ball.phase) * 150
+                    x: x * Math.cos(rot) - z * Math.sin(rot),
+                    y: y,
+                    z: x * Math.sin(rot) + z * Math.cos(rot)
                 };
             }
         };
@@ -178,13 +190,13 @@ export class VectorBalls {
 
     getNextPattern() {
         if (this.isFirstTransition) {
-            return 'figure8';
+            return 'infinity';
         }
         
-        const patterns = Object.keys(this.patterns);
-        const currentIndex = patterns.indexOf(this.currentPattern);
-        const nextIndex = (currentIndex + 1) % patterns.length;
-        return patterns[nextIndex];
+        const sequence = ['circle', 'infinity', 'cube', 'dodecahedron'];
+        const currentIndex = sequence.indexOf(this.currentPattern);
+        const nextIndex = (currentIndex + 1) % sequence.length;
+        return sequence[nextIndex];
     }
 
     fadeIn(duration = 2000) {
