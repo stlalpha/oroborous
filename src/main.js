@@ -128,6 +128,7 @@ class Demo {
             this.plasma.fadeOut();
             await new Promise(resolve => setTimeout(resolve, 2000));
             this.copperBars.fadeIn();
+            this.scroller.setMessage('copper');
             
             // Wait before transitioning to vector balls
             setTimeout(() => {
@@ -144,6 +145,7 @@ class Demo {
         this.copperBars.fadeOut();
         await new Promise(resolve => setTimeout(resolve, 2000));
         this.vectorBalls.fadeIn();
+        this.scroller.setMessage('vectorBalls');
     }
 }
 

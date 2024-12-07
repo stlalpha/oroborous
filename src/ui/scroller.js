@@ -1,7 +1,12 @@
 export class TextScroller {
     constructor(elementId) {
         this.element = document.getElementById(elementId);
-        this.text = this.element.textContent;
+        this.messages = {
+            plasma: "-=PiRATE MiND STATiON=-................--==<<[ WELCOME TO THE DEMO! ]>>==--..........",
+            copper: "--==<<[ COPPER BARS EFFECT - JUST LIKE THE GOOD OLD DAYS! ]>>==--................",
+            vectorBalls: "--==<<[ VECTOR BALLS - BRINGING BACK MEMORIES OF CLASSIC DEMOS ]>>==--..........."
+        };
+        this.currentMessage = this.messages.plasma;
         
         document.fonts.ready.then(() => {
             this.init();
@@ -9,16 +14,28 @@ export class TextScroller {
     }
 
     init() {
+        this.updateText(this.currentMessage);
+        this.updateBounds();
+    }
+
+    updateText(newText) {
         // Clear and create spans
         this.element.textContent = '';
-        this.text.split('').forEach((char) => {
+        this.currentMessage = newText;
+        newText.split('').forEach((char) => {
             const span = document.createElement('span');
             span.textContent = char;
             span.style.transition = 'opacity 0.2s';
             this.element.appendChild(span);
         });
+    }
 
-        this.updateBounds();
+    setMessage(effectName) {
+        if (this.messages[effectName]) {
+            this.updateText(this.messages[effectName]);
+            // Reset position when changing message
+            this.textPos = this.crtBounds?.right + 800;
+        }
     }
 
     updateBounds() {
@@ -49,7 +66,7 @@ export class TextScroller {
         this.textPos -= 2;
         
         // Calculate the total width of the text
-        const textWidth = this.text.length * 30;
+        const textWidth = this.currentMessage.length * 30;
         
         // Reset when the entire text has moved past the left edge
         if (this.textPos + textWidth < -800) {
