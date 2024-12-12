@@ -11,6 +11,10 @@ export class TextScroller {
         document.fonts.ready.then(() => {
             this.init();
         });
+        
+        this.scrollSpeed = 2; // pixels per frame
+        this.isScrollComplete = false;
+        this.onScrollComplete = null;
     }
 
     init() {
@@ -30,11 +34,12 @@ export class TextScroller {
         });
     }
 
-    setMessage(effectName) {
+    setMessage(effectName, onComplete = null) {
         if (this.messages[effectName]) {
             this.updateText(this.messages[effectName]);
-            // Reset position when changing message
             this.textPos = this.crtBounds?.right + 800;
+            this.isScrollComplete = false;
+            this.onScrollComplete = onComplete;
         }
     }
 
@@ -60,17 +65,47 @@ export class TextScroller {
         }
     }
 
+    calculateScrollDuration() {
+        if (!this.crtBounds) return 0;
+        
+        const textWidth = this.currentMessage.length * 30;
+        const totalDistance = this.crtBounds.right + 800 + textWidth;
+        const framesNeeded = totalDistance / this.scrollSpeed;
+        
+        // Convert frames to milliseconds (assuming 60fps)
+        const duration = (framesNeeded / 60) * 1000;
+        
+        console.log('📏 Scroll duration calculation:', {
+            textWidth,
+            totalDistance,
+            framesNeeded,
+            duration,
+            message: this.currentMessage
+        });
+        
+        return duration;
+    }
+
     update(timestamp) {
         if (!this.crtBounds) return;
         
-        this.textPos -= 2;
+        this.textPos -= this.scrollSpeed;
         
         // Calculate the total width of the text
         const textWidth = this.currentMessage.length * 30;
         
-        // Reset when the entire text has moved past the left edge
+        // Check if scroll is complete
         if (this.textPos + textWidth < -800) {
+            this.isScrollComplete = true;
+            console.log('📜 Text scroll complete:', {
+                message: this.currentMessage,
+                finalPosition: this.textPos + textWidth
+            });
+            if (this.onScrollComplete) {
+                this.onScrollComplete();
+            }
             this.textPos = this.crtBounds.right + 800;
+            this.isScrollComplete = false;
         }
 
         Array.from(this.element.children).forEach((span, index) => {

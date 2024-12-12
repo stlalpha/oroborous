@@ -13,6 +13,25 @@ console.log('🔍 CopperBars class available:', typeof CopperBars);
 
 class Demo {
     constructor() {
+        // Effect configurations
+        this.effectConfigs = {
+            plasma: {
+                duration: 20000,  // 20 seconds
+                name: 'plasma'
+            },
+            copper: {
+                duration: 20000,  // 20 seconds
+                name: 'copper'
+            },
+            vectorBalls: {
+                duration: 20000,  // 20 seconds
+                name: 'vectorBalls'
+            }
+        };
+
+        // Track current effect
+        this.currentEffect = 'plasma';
+        
         try {
             // Initialize audio manager immediately
             this.audioManager = new AudioManager();
@@ -36,7 +55,14 @@ class Demo {
                 });
 
                 // Auto transition after 15 seconds
-                setTimeout(() => this.transitionEffects(), 15000);
+                const scrollDuration = this.scroller.calculateScrollDuration();
+                const initialDuration = Math.max(this.effectConfigs.plasma.duration, scrollDuration);
+                console.log('⏱️ Initial effect timings:', {
+                    scrollDuration,
+                    configuredDuration: this.effectConfigs.plasma.duration,
+                    actualDuration: initialDuration
+                });
+                setTimeout(() => this.transitionEffects(), initialDuration);
                 
                 this.init();
                 window.addEventListener('resize', this.handleResize.bind(this));
@@ -124,16 +150,47 @@ class Demo {
         if (!this.plasma || !this.copperBars) return;
         
         try {
-            // First transition: plasma to copper bars
-            this.plasma.fadeOut();
-            await new Promise(resolve => setTimeout(resolve, 2000));
-            this.copperBars.fadeIn();
-            this.scroller.setMessage('copper');
+            // Calculate minimum duration needed for text scroll
+            const scrollDuration = this.scroller.calculateScrollDuration();
+            const plasmaDuration = Math.max(this.effectConfigs.plasma.duration, scrollDuration);
             
-            // Wait before transitioning to vector balls
-            setTimeout(() => {
-                this.transitionToVectorBalls();
-            }, 10000);
+            console.log('⏱️ Plasma to Copper transition timings:', {
+                scrollDuration,
+                configuredDuration: this.effectConfigs.plasma.duration,
+                actualDuration: plasmaDuration,
+                fadeOutStart: plasmaDuration - 2000
+            });
+            
+            // First transition: plasma to copper bars
+            await new Promise(resolve => {
+                this.scroller.setMessage('copper', () => {
+                    console.log('✨ Copper text scroll complete');
+                    resolve();
+                });
+                setTimeout(() => {
+                    console.log('🔄 Starting plasma fadeOut');
+                    this.plasma.fadeOut();
+                }, plasmaDuration - 2000);
+            });
+
+            console.log('🔄 Starting copper fadeIn');
+            this.copperBars.fadeIn();
+            
+            // Wait for copper bars duration
+            const copperDuration = Math.max(this.effectConfigs.copper.duration, scrollDuration);
+            console.log('⏱️ Copper duration:', {
+                scrollDuration,
+                configuredDuration: this.effectConfigs.copper.duration,
+                actualDuration: copperDuration
+            });
+            
+            await new Promise(resolve => {
+                setTimeout(() => {
+                    console.log('🔄 Starting transition to vector balls');
+                    this.transitionToVectorBalls();
+                    resolve();
+                }, copperDuration);
+            });
         } catch (error) {
             console.error('Error during transition:', error);
         }
@@ -142,10 +199,27 @@ class Demo {
     async transitionToVectorBalls() {
         if (!this.copperBars || !this.vectorBalls) return;
         
+        const scrollDuration = this.scroller.calculateScrollDuration();
+        const vectorDuration = Math.max(this.effectConfigs.vectorBalls.duration, scrollDuration);
+        
+        console.log('⏱️ Vector Balls transition timings:', {
+            scrollDuration,
+            configuredDuration: this.effectConfigs.vectorBalls.duration,
+            actualDuration: vectorDuration
+        });
+        
+        console.log('🔄 Starting copper bars fadeOut');
         this.copperBars.fadeOut();
         await new Promise(resolve => setTimeout(resolve, 2000));
+        console.log('🔄 Starting vector balls fadeIn');
         this.vectorBalls.fadeIn();
-        this.scroller.setMessage('vectorBalls');
+        
+        await new Promise(resolve => {
+            this.scroller.setMessage('vectorBalls', () => {
+                console.log('✨ Vector Balls text scroll complete');
+                resolve();
+            });
+        });
     }
 }
 
