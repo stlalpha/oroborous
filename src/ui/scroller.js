@@ -1,6 +1,8 @@
 export class TextScroller {
     constructor(elementId) {
         this.element = document.getElementById(elementId);
+        // Initially hide the scroller
+        this.element.style.opacity = '0';
         this.messages = {
             plasma: "-=PiRATE MiND STATiON=-................--==<<[ WELCOME TO THE DEMO! ]>>==--..........",
             copper: "--==<<[ COPPER BARS EFFECT - JUST LIKE THE GOOD OLD DAYS! ]>>==--................",
@@ -101,5 +103,13 @@ export class TextScroller {
             // Apply opacity with smooth transition
             span.style.opacity = Math.max(0, Math.min(1, opacity));
         });
+    }
+
+    show() {
+        this.element.style.opacity = '1';
+    }
+
+    hide() {
+        this.element.style.opacity = '0';
     }
 } 

@@ -2,12 +2,19 @@ import { amigaPalette } from '../utils/amigaPalette.js';
 
 export class PlasmaEffect {
     constructor(canvasId) {
+        console.log('🎨 Creating Plasma Effect...');
+        
         // Main display canvas
         this.displayCanvas = document.getElementById(canvasId);
         if (!this.displayCanvas) {
+            console.error('Canvas not found:', canvasId);
             throw new Error(`Canvas with id ${canvasId} not found`);
         }
-
+        
+        // Ensure canvas is visible
+        this.displayCanvas.style.opacity = '0';
+        this.displayCanvas.style.transition = 'opacity 2s ease-in-out';
+        
         // Create buffer canvas
         this.bufferCanvas = document.createElement('canvas');
         this.bufferCanvas.width = window.innerWidth;
@@ -18,6 +25,7 @@ export class PlasmaEffect {
         if (!this.gl) {
             throw new Error('WebGL not supported');
         }
+        console.log('✓ WebGL context created');
 
         // Setup display canvas
         this.displayCtx = this.displayCanvas.getContext('2d');
@@ -26,26 +34,35 @@ export class PlasmaEffect {
         
         this.program = null;
         this.uniforms = {};
-        this.isRendering = true;
+        this.isRendering = true;  // Set to true by default
+        console.log('✓ Display context setup complete');
         
         this.init();
+        console.log('✓ Plasma effect initialized');
     }
 
     init() {
-        // Resize handling
-        this.resize = this.resize.bind(this);
-        window.addEventListener('resize', this.resize);
-        this.resize();
-
-        // Initialize WebGL
-        this.initShaders();
-        this.initBuffers();
-        this.initUniforms();
+        try {
+            // Initialize WebGL
+            this.initShaders();
+            console.log('✓ Shaders initialized');
+            this.initBuffers();
+            console.log('✓ Buffers initialized');
+            this.initUniforms();
+            console.log('✓ Uniforms initialized');
+            this.resize = this.resize.bind(this);
+            window.addEventListener('resize', this.resize);
+            this.resize();
+            console.log('✓ Initial resize complete');
+        } catch (error) {
+            console.error('❌ Error initializing plasma effect:', error);
+            throw error;
+        }
     }
 
     resize() {
-        const width = window.innerWidth;
-        const height = window.innerHeight;
+        const width = this.displayCanvas.offsetWidth;
+        const height = this.displayCanvas.offsetHeight;
         
         // Resize both canvases
         this.displayCanvas.width = width;
@@ -77,16 +94,10 @@ export class PlasmaEffect {
                 float v3 = sin(uv.x * 10.0 + uv.y * 10.0 + time);
                 float v = v1 + v2 + v3;
                 
-                vec3 color1 = vec3(0.5, 0.0, 0.5);
-                vec3 color2 = vec3(0.0, 0.7, 0.7);
+                vec3 color1 = vec3(0.5, 0.0, 0.5);  // Purple
+                vec3 color2 = vec3(0.0, 0.7, 0.7);  // Cyan
                 vec3 finalColor = mix(color1, color2, v * 0.5 + 0.5);
                 
-                float scanline = sin(gl_FragCoord.y * 0.7) * 0.15;
-                finalColor = finalColor * (0.85 + scanline);
-                
-                float vignette = length(vec2(0.5, 0.5) - uv) * 0.5;
-                finalColor = finalColor * (1.0 - vignette);
-
                 gl_FragColor = vec4(finalColor, 1.0);
             }
         `;
@@ -150,27 +161,29 @@ export class PlasmaEffect {
     }
 
     fadeIn() {
+        console.log('🎨 Fading in plasma effect');
+        this.displayCanvas.style.opacity = '1';
         this.isRendering = true;
-        // Start rendering to buffer
-        requestAnimationFrame(() => {
-            // Ensure we have a frame rendered before showing
-            this.render(performance.now());
-            requestAnimationFrame(() => {
-                this.displayCanvas.style.opacity = '1';
-            });
-        });
     }
 
     render(time) {
-        if (!this.isRendering) return;
+        if (!this.isRendering) {
+            console.log('⏸️ Plasma rendering paused');
+            return;
+        }
 
-        // Render to buffer
-        this.gl.uniform1f(this.uniforms.time, time * 0.001);
-        this.gl.uniform2f(this.uniforms.resolution, this.bufferCanvas.width, this.bufferCanvas.height);
-        this.gl.drawArrays(this.gl.TRIANGLE_STRIP, 0, 4);
-        
-        // Copy to display canvas
-        this.displayCtx.clearRect(0, 0, this.displayCanvas.width, this.displayCanvas.height);
-        this.displayCtx.drawImage(this.bufferCanvas, 0, 0);
+        try {
+            // Render to buffer
+            this.gl.uniform1f(this.uniforms.time, time * 0.001);
+            this.gl.uniform2f(this.uniforms.resolution, this.bufferCanvas.width, this.bufferCanvas.height);
+            this.gl.drawArrays(this.gl.TRIANGLE_STRIP, 0, 4);
+            
+            // Copy to display canvas
+            this.displayCtx.clearRect(0, 0, this.displayCanvas.width, this.displayCanvas.height);
+            this.displayCtx.drawImage(this.bufferCanvas, 0, 0);
+        } catch (error) {
+            console.error('❌ Error rendering plasma:', error);
+            this.isRendering = false;
+        }
     }
 } 

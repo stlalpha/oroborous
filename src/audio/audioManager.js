@@ -38,6 +38,26 @@ export class AudioManager {
         // Track user interaction globally
         this.setupInteractionTracking();
         this.unlockAudio();
+
+        // Add a flag to track if we're waiting for interaction
+        this.pendingAutoplay = true;
+
+        // Add interaction listeners
+        const startAudio = () => {
+            if (this.pendingAutoplay) {
+                console.log('👆 User interaction detected, starting audio...');
+                this.pendingAutoplay = false;
+                this.play();
+                // Remove listeners after first interaction
+                ['click', 'keydown', 'touchstart'].forEach(event => {
+                    document.removeEventListener(event, startAudio);
+                });
+            }
+        };
+
+        ['click', 'keydown', 'touchstart'].forEach(event => {
+            document.addEventListener(event, startAudio);
+        });
     }
 
     setupInteractionTracking() {
@@ -100,25 +120,18 @@ export class AudioManager {
         if (!this.isInitialized) return;
 
         try {
-            // If no user interaction yet, start muted
-            if (!this.hasInteracted) {
-                this.desiredVolume = this.audio.volume;
-                this.audio.muted = true;
-                this.audio.volume = 0;
-            }
-            
             await this.audio.play();
-            
-            // If user has already interacted, unmute immediately
-            if (this.hasInteracted) {
-                this.audio.muted = false;
-                this.audio.volume = this.desiredVolume;
-            }
-            
+            console.log('🎵 Audio playback started successfully');
             return true;
         } catch (error) {
-            console.warn('Autoplay prevented:', error);
-            return false;
+            if (error.name === 'NotAllowedError') {
+                console.log('⏳ Audio autoplay waiting for user interaction');
+                this.pendingAutoplay = true;
+                return false;
+            } else {
+                console.error('❌ Audio playback error:', error);
+                throw error;
+            }
         }
     }
 
@@ -228,6 +241,23 @@ export class AudioManager {
             this.unlocked = true;
         } catch (error) {
             console.warn('Audio unlock failed:', error);
+        }
+    }
+
+    async setupBackgroundMusic() {
+        try {
+            console.log('🎵 Setting up background music...');
+            const musicPath = './assets/music/background-track.mp3';
+            await this.loadTrack(musicPath);
+            this.setVolume(0.5);
+            
+            // Don't throw error if autoplay fails
+            const result = await this.play();
+            if (!result) {
+                console.log('🔇 Music will start after user interaction');
+            }
+        } catch (error) {
+            console.error('🔴 Error in setupBackgroundMusic:', error);
         }
     }
 } 
