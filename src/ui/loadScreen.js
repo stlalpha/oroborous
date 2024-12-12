@@ -14,15 +14,128 @@ export class LoadScreen {
             z-index: 10;
             display: flex;
             flex-direction: column;
-            justify-content: flex-start;
-            align-items: flex-start;
             font-family: monospace;
             color: #fff;
             transition: opacity 1s;
             border-radius: 20px;
             overflow: hidden;
-            padding: 40px;
         `;
+
+        // Create SMPTE color bars
+        const colorBars = document.createElement('div');
+        colorBars.style.cssText = `
+            position: relative;
+            width: 100%;
+            height: 67%;
+            display: flex;
+        `;
+
+        // Main SMPTE bars (75% white)
+        const mainColors = [
+            '#FFFFFF', // White (100%)
+            '#FFFF00', // Yellow
+            '#00FFFF', // Cyan
+            '#00FF00', // Green
+            '#FF00FF', // Magenta
+            '#FF0000', // Red
+            '#0000FF'  // Blue
+        ];
+
+        mainColors.forEach(color => {
+            const bar = document.createElement('div');
+            bar.style.cssText = `
+                flex: 1;
+                background-color: ${color};
+            `;
+            colorBars.appendChild(bar);
+        });
+
+        // Create reverse bars section (bottom third of main bars)
+        const reverseSection = document.createElement('div');
+        reverseSection.style.cssText = `
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 33%;
+            display: flex;
+        `;
+
+        // Reverse pattern colors
+        const reverseColors = [
+            '#0000FF', // Blue
+            '#000000', // Black
+            '#FF00FF', // Magenta
+            '#000000', // Black
+            '#00FFFF', // Cyan
+            '#000000', // Black
+            '#FFFFFF'  // White
+        ];
+
+        reverseColors.forEach(color => {
+            const bar = document.createElement('div');
+            bar.style.cssText = `
+                flex: 1;
+                background-color: ${color};
+            `;
+            reverseSection.appendChild(bar);
+        });
+
+        colorBars.appendChild(reverseSection);
+
+        // Create -I, White, +Q, Black section
+        const iqSection = document.createElement('div');
+        iqSection.style.cssText = `
+            width: 100%;
+            height: 8%;
+            display: flex;
+        `;
+
+        const iqColors = [
+            '#4A0088', // -I
+            '#FFFFFF', // White
+            '#88007F', // +Q
+            '#000000', // Black
+            '#000000', // Black
+            '#000000', // Black
+            '#000000'  // Black
+        ];
+
+        iqColors.forEach(color => {
+            const bar = document.createElement('div');
+            bar.style.cssText = `
+                flex: 1;
+                background-color: ${color};
+            `;
+            iqSection.appendChild(bar);
+        });
+
+        // Create pluge and black section
+        const plugeSection = document.createElement('div');
+        plugeSection.style.cssText = `
+            width: 100%;
+            height: 12%;
+            display: flex;
+        `;
+
+        const plugeColors = [
+            '#161616', // 3.5% below black
+            '#000000', // Black
+            '#1A1A1A', // 3.5% above black
+            '#000000', // Black
+            '#FFFFFF', // White
+            '#000000', // Black
+            '#000000'  // Black
+        ];
+
+        plugeColors.forEach(color => {
+            const bar = document.createElement('div');
+            bar.style.cssText = `
+                flex: 1;
+                background-color: ${color};
+            `;
+            plugeSection.appendChild(bar);
+        });
 
         // Create technical info text
         this.technicalInfo = document.createElement('div');
@@ -32,9 +145,15 @@ export class LoadScreen {
             color: #fff;
             text-align: left;
             line-height: 1.8;
-            margin-bottom: 40px;
+            padding: 20px;
+            position: absolute;
+            bottom: 120px;
+            left: 20px;
+            text-shadow: 2px 2px 0px #000;
+            z-index: 2;
         `;
         this.technicalInfo.innerHTML = `
+            SMPTE COLOR BARS
             PIRATE MIND STATION TEST PATTERN
             PLEASE STAND BY...
             COLOR BAR SIGNAL: ACTIVE
@@ -50,7 +169,7 @@ export class LoadScreen {
             font-size: 24px;
             color: #fff;
             position: absolute;
-            bottom: 200px;
+            bottom: 80px;
             left: 50%;
             transform: translateX(-50%);
             text-align: center;
@@ -58,6 +177,7 @@ export class LoadScreen {
                 2px 0 #ff00ff,
                 -2px 0 #00ffff;
             animation: glitch 1s infinite;
+            z-index: 2;
         `;
         glitchLogo.innerHTML = `
             -=PiRATE MiND STATiON=-
@@ -75,12 +195,13 @@ export class LoadScreen {
             color: #fff;
             cursor: pointer;
             position: absolute;
-            bottom: 100px;
+            bottom: 30px;
             left: 50%;
             transform: translateX(-50%);
             opacity: 0;
             display: none;
             transition: all 0.3s;
+            z-index: 2;
         `;
 
         // Add hover effects
@@ -112,7 +233,7 @@ export class LoadScreen {
                 rgba(255, 255, 255, 0) 50%,
                 rgba(0, 0, 0, 0.2) 50%
             );
-            background-size: 100% 2px;
+            background-size: 100% 4px;
             pointer-events: none;
             z-index: 3;
         `;
@@ -131,6 +252,9 @@ export class LoadScreen {
         document.head.appendChild(style);
 
         // Assemble the elements
+        this.container.appendChild(colorBars);
+        this.container.appendChild(iqSection);
+        this.container.appendChild(plugeSection);
         this.container.appendChild(this.technicalInfo);
         this.container.appendChild(glitchLogo);
         this.container.appendChild(this.launchButton);
