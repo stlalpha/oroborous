@@ -152,7 +152,7 @@ export class LoadScreen {
             plugeSection.appendChild(bar);
         });
 
-        // Create technical info text
+        // Create technical info element
         this.technicalInfo = document.createElement('div');
         this.technicalInfo.style.cssText = `
             font-family: monospace;
@@ -168,18 +168,9 @@ export class LoadScreen {
             z-index: 2;
         `;
 
-        // Add system info gathering
-        const browserInfo = this.getBrowserInfo();
-        const gpuInfo = this.getGPUInfo();
-        const screenInfo = this.getScreenInfo();
-        const audioInfo = this.getAudioInfo();
-
-        this.systemStatus = "INITIALIZING";
-        this.updateTechnicalInfo(browserInfo, gpuInfo, screenInfo, audioInfo);
-
-        // Create glitch text effect
-        const glitchLogo = document.createElement('div');
-        glitchLogo.style.cssText = `
+        // Create glitch logo first (before gathering system info)
+        this.glitchLogo = document.createElement('div');
+        this.glitchLogo.style.cssText = `
             font-family: monospace;
             font-size: 24px;
             color: #fff;
@@ -188,16 +179,18 @@ export class LoadScreen {
             left: 50%;
             transform: translateX(-50%);
             text-align: center;
-            text-shadow: 
-                2px 0 #ff00ff,
-                -2px 0 #00ffff;
-            animation: glitch 1s infinite;
+            text-shadow: 2px 0 #ff00ff, -2px 0 #00ffff;
             z-index: 2;
         `;
-        glitchLogo.innerHTML = `
-            -=PiRATE MiND STATiON=-
-        `;
-
+        this.glitchLogo.innerHTML = `-=PiRATE MiND STATiON=-`;
+        
+        // Now gather system info but don't display yet
+        this.systemStatus = "INITIALIZING";
+        this.browserInfo = this.getBrowserInfo();
+        this.gpuInfo = this.getGPUInfo();
+        this.screenInfo = this.getScreenInfo();
+        this.audioInfo = this.getAudioInfo();
+        
         // Create launch button
         this.launchButton = document.createElement('button');
         this.launchButton.textContent = "START TRANSMISSION";
@@ -257,26 +250,90 @@ export class LoadScreen {
         const style = document.createElement('style');
         style.textContent = `
             @keyframes glitch {
-                0%, 100% { transform: translateX(-50%) skew(0deg); }
-                20% { transform: translateX(-50%) skew(-1deg); }
-                40% { transform: translateX(-50%) skew(1deg); }
-                60% { transform: translateX(-50%) skew(-1deg); }
-                80% { transform: translateX(-50%) skew(1deg); }
+                0% { 
+                    transform: translate(0) skew(0deg);
+                    text-shadow: 2px 0 #ff00ff, -2px 0 #00ffff;
+                }
+                20% { 
+                    transform: translate(-3px) skew(-20deg);
+                    text-shadow: -2px 0 #ff00ff, 2px 0 #00ffff;
+                }
+                40% { 
+                    transform: translate(2px) skew(20deg);
+                    text-shadow: 4px 0 #ff00ff, -4px 0 #00ffff;
+                }
+                60% { 
+                    transform: translate(-2px) skew(-5deg);
+                    text-shadow: -3px 0 #ff00ff, 3px 0 #00ffff;
+                }
+                80% { 
+                    transform: translate(1px) skew(10deg);
+                    text-shadow: 3px 0 #ff00ff, -3px 0 #00ffff;
+                }
+                100% { 
+                    transform: translate(0) skew(0deg);
+                    text-shadow: 2px 0 #ff00ff, -2px 0 #00ffff;
+                }
+            }
+
+            @keyframes glitchLogo {
+                0% { 
+                    transform: translateX(-50%) skew(0deg);
+                    text-shadow: 2px 0 #ff00ff, -2px 0 #00ffff;
+                }
+                20% { 
+                    transform: translateX(-53%) skew(-20deg);
+                    text-shadow: -2px 0 #ff00ff, 2px 0 #00ffff;
+                }
+                40% { 
+                    transform: translateX(-48%) skew(20deg);
+                    text-shadow: 4px 0 #ff00ff, -4px 0 #00ffff;
+                }
+                60% { 
+                    transform: translateX(-52%) skew(-5deg);
+                    text-shadow: -3px 0 #ff00ff, 3px 0 #00ffff;
+                }
+                80% { 
+                    transform: translateX(-49%) skew(10deg);
+                    text-shadow: 3px 0 #ff00ff, -3px 0 #00ffff;
+                }
+                100% { 
+                    transform: translateX(-50%) skew(0deg);
+                    text-shadow: 2px 0 #ff00ff, -2px 0 #00ffff;
+                }
             }
         `;
         document.head.appendChild(style);
 
-        // Assemble the elements
+        // Assemble all elements
         this.container.appendChild(colorBars);
         this.container.appendChild(iqSection);
         this.container.appendChild(plugeSection);
         this.container.appendChild(this.technicalInfo);
-        this.container.appendChild(glitchLogo);
+        this.container.appendChild(this.glitchLogo);
         this.container.appendChild(this.launchButton);
         this.container.appendChild(scanlines);
         crtContainer.appendChild(this.container);
 
-        // Start the countdown
+        // Start the sequence:
+        // 1. Start glitch
+        // 2. Wait 2 seconds
+        // 3. Begin typing
+        this.startSequence();
+    }
+
+    async startSequence() {
+        // Start glitch animations with faster speed
+        this.glitchLogo.style.animation = 'glitchLogo 0.2s infinite';
+        this.technicalInfo.style.animation = 'glitch 0.2s infinite';
+        
+        // 2. Wait 2 seconds
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        
+        // 3. Begin typing
+        await this.updateTechnicalInfo(this.browserInfo, this.gpuInfo, this.screenInfo, this.audioInfo);
+        
+        // 4. Start the countdown for the launch button
         this.startCountdown();
     }
 
@@ -336,10 +393,18 @@ export class LoadScreen {
         }
 
         const debugInfo = gl.getExtension('WEBGL_debug_renderer_info');
-        return {
-            renderer: debugInfo ? gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL) : 'Unknown',
-            vendor: debugInfo ? gl.getParameter(debugInfo.UNMASKED_VENDOR_WEBGL) : 'Unknown'
-        };
+        let renderer = debugInfo ? gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL) : 'Unknown';
+        let vendor = debugInfo ? gl.getParameter(debugInfo.UNMASKED_VENDOR_WEBGL) : 'Unknown';
+
+        // Clean up Mac GPU info
+        if (renderer.includes('Google')) {
+            if (navigator.platform.toLowerCase().includes('mac')) {
+                renderer = 'Apple M1/M2 GPU';
+                vendor = 'Apple';
+            }
+        }
+
+        return { renderer, vendor };
     }
 
     getScreenInfo() {
@@ -393,15 +458,40 @@ export class LoadScreen {
         return fullText;
     }
 
+    async simulateSignalLock(fullText) {
+        const glitchDuration = 2000 + Math.random() * 3000;
+        await new Promise(resolve => setTimeout(resolve, glitchDuration));
+        
+        // Stop both glitch animations
+        this.glitchLogo.style.animation = 'none';
+        this.technicalInfo.style.animation = 'none';
+        
+        // Update the signal lock status
+        const updatedText = fullText.replace(
+            'SIGNAL LOCK STATUS: ACQUIRING',
+            'SIGNAL LOCK STATUS: <strong>ACQUIRED</strong>'
+        );
+        
+        this.technicalInfo.innerHTML = updatedText;
+    }
+
     async updateTechnicalInfo(browserInfo, gpuInfo, screenInfo, audioInfo) {
-        const memoryInfo = performance?.memory ? 
-            `MEMORY: ${Math.round(performance.memory.usedJSHeapSize / 1048576)}MB / ${Math.round(performance.memory.jsHeapSizeLimit / 1048576)}MB` :
-            'MEMORY: NOT AVAILABLE';
+        const memoryInfo = (() => {
+            if (performance?.memory) {
+                const totalMemGB = navigator.deviceMemory || 
+                                  Math.round(performance.memory.jsHeapSizeLimit / (1024 * 1024 * 1024));
+                return `MEMORY: ${totalMemGB}GB TOTAL`;
+            }
+            return 'MEMORY: NOT AVAILABLE';
+        })();
 
         const canvasWidth = this.canvas?.width || window.innerWidth;
         const canvasHeight = this.canvas?.height || window.innerHeight;
 
         const text = `
+            ATTEMPTING TO ACQUIRE SIGNAL LOCK...
+            SIGNAL LOCK STATUS: ACQUIRING
+            
             SMPTE COLOR BARS
             PIRATE MIND STATION TEST PATTERN
             PLEASE STAND BY...
@@ -433,6 +523,9 @@ export class LoadScreen {
         this.technicalInfo.innerHTML = '';
         
         // Type out the text
-        await this.typeText(text);
+        const fullText = await this.typeText(text);
+        
+        // Start the signal lock simulation after typing is complete
+        await this.simulateSignalLock(fullText);
     }
 } 
