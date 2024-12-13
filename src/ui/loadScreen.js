@@ -210,17 +210,21 @@ export class LoadScreen {
             display: none;
             transition: all 0.3s;
             z-index: 2;
+            animation: pulseGlow 2s infinite;
         `;
 
         // Add hover effects
         this.launchButton.addEventListener('mouseover', () => {
             this.launchButton.style.background = '#fff';
             this.launchButton.style.color = '#000';
+            this.launchButton.style.animation = 'none';
+            this.launchButton.style.boxShadow = '0 0 15px #fff, 0 0 25px #fff, 0 0 35px #ff00ff, 0 0 45px #00ffff';
         });
 
         this.launchButton.addEventListener('mouseout', () => {
             this.launchButton.style.background = '#000';
             this.launchButton.style.color = '#fff';
+            this.launchButton.style.animation = 'pulseGlow 2s infinite';
         });
 
         this.launchButton.addEventListener('click', () => {
@@ -302,8 +306,46 @@ export class LoadScreen {
                     text-shadow: 2px 0 #ff00ff, -2px 0 #00ffff;
                 }
             }
+
+            @keyframes pulseGlow {
+                0% {
+                    box-shadow: 0 0 5px #fff,
+                               0 0 10px #fff,
+                               0 0 15px #ff00ff,
+                               0 0 20px #00ffff;
+                }
+                50% {
+                    box-shadow: 0 0 10px #fff,
+                               0 0 20px #fff,
+                               0 0 25px #ff00ff,
+                               0 0 30px #00ffff;
+                }
+                100% {
+                    box-shadow: 0 0 5px #fff,
+                               0 0 10px #fff,
+                               0 0 15px #ff00ff,
+                               0 0 20px #00ffff;
+                }
+            }
         `;
         document.head.appendChild(style);
+
+        // Create loading text
+        this.loadingText = document.createElement('div');
+        this.loadingText.style.cssText = `
+            font-family: monospace;
+            font-size: 16px;
+            color: #fff;
+            position: absolute;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            text-align: center;
+            text-shadow: 2px 2px 0px #000;
+            z-index: 2;
+        `;
+        this.loadingText.textContent = "LOADING....";
+        this.container.appendChild(this.loadingText);
 
         // Assemble all elements
         this.container.appendChild(colorBars);
@@ -463,10 +505,8 @@ export class LoadScreen {
     }
 
     async simulateSignalLock(fullText) {
-        // Add logging to track timing
         console.log('🎬 Starting signal lock simulation');
         
-        // Random duration between 6-10 seconds for text glitch
         const textGlitchDuration = 6000 + Math.floor(Math.random() * 4000);
         console.log(`⏱️ Glitch duration set to: ${textGlitchDuration/1000} seconds`);
         
@@ -491,14 +531,7 @@ export class LoadScreen {
                 
                 this.technicalInfo.innerHTML = updatedText;
                 
-                // Show launch button
-                if (this.launchButton) {
-                    this.launchButton.style.display = 'block';
-                    requestAnimationFrame(() => {
-                        this.launchButton.style.opacity = '1';
-                    });
-                }
-                
+                // Don't show launch button yet - wait for typing to complete
                 resolve();
             }, textGlitchDuration);
 
@@ -559,6 +592,15 @@ export class LoadScreen {
         console.log('⌨️ Typing text...');
         const fullText = await this.typeText(text);
         console.log('✅ Technical info sequence complete');
+
+        // After typing is complete, replace loading text with launch button
+        this.loadingText.remove();
+        if (this.launchButton) {
+            this.launchButton.style.display = 'block';
+            requestAnimationFrame(() => {
+                this.launchButton.style.opacity = '1';
+            });
+        }
     }
 
     async startCountdown() {
