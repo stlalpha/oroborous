@@ -466,51 +466,65 @@ export class LoadScreen {
     async typeText(text) {
         const lines = text.split('\n').map(line => line.trim());
         let fullText = '';
-        const cursor = '█';
+        const labelSpeed = 20; // faster typing for labels
+        const valueSpeed = 40; // slower typing for values
         
-        for (let i = 0; i < lines.length; i++) {
-            const line = lines[i];
+        for (const line of lines) {
+            if (line.includes('SIGNAL LOCK STATUS:')) {
+                // Display this line immediately and handle simulation
+                fullText += line + '\n';
+                this.technicalInfo.innerHTML = fullText.split('\n').join('<br>');
+                fullText = await this.simulateSignalLock(fullText); // Update fullText with result
+                continue;
+            }
             
-            // If this is the signal lock line, type it out and then wait for simulation
-            if (line.includes('SIGNAL LOCK STATUS: ACQUIRING')) {
-                for (let j = 0; j < line.length; j++) {
-                    fullText += line[j];
-                    this.technicalInfo.innerHTML = (fullText + cursor).split('\n').join('<br>');
-                    await new Promise(resolve => setTimeout(resolve, 22.5 + Math.random() * 30));
+            // Skip empty lines or decorative lines
+            if (!line || line.startsWith('PLEASE') || line.startsWith('SYSTEM')) {
+                fullText += line + '\n';
+                this.technicalInfo.innerHTML = fullText.split('\n').join('<br>');
+                continue;
+            }
+
+            // Split line into label and value
+            const colonIndex = line.indexOf(':');
+            if (colonIndex !== -1) {
+                const label = line.substring(0, colonIndex + 1);
+                const value = line.substring(colonIndex + 1);
+
+                // Type label at faster speed
+                for (const char of label) {
+                    fullText += char;
+                    this.technicalInfo.innerHTML = fullText.split('\n').join('<br>');
+                    await new Promise(resolve => setTimeout(resolve, labelSpeed));
                 }
-                fullText += '\n';
-                this.technicalInfo.innerHTML = (fullText + cursor).split('\n').join('<br>');
-                
-                // Start the signal lock simulation and wait for it
-                await this.simulateSignalLock(fullText);
-                
-                // Update the line in fullText after simulation completes
-                const lines = fullText.split('\n');
-                lines[lines.findIndex(l => l.includes('SIGNAL LOCK STATUS:'))] = 
-                    'SIGNAL LOCK STATUS: <strong>ACQUIRED</strong>';
-                fullText = lines.join('\n');
-                this.technicalInfo.innerHTML = (fullText + cursor).split('\n').join('<br>');
+
+                // Type value at slower speed
+                for (const char of value) {
+                    fullText += char;
+                    this.technicalInfo.innerHTML = fullText.split('\n').join('<br>');
+                    await new Promise(resolve => setTimeout(resolve, valueSpeed));
+                }
             } else {
-                // Type out other lines normally
-                for (let j = 0; j < line.length; j++) {
-                    fullText += line[j];
-                    this.technicalInfo.innerHTML = (fullText + cursor).split('\n').join('<br>');
-                    await new Promise(resolve => setTimeout(resolve, 22.5 + Math.random() * 30));
-                }
-                if (i < lines.length - 1) {
-                    fullText += '\n';
-                    this.technicalInfo.innerHTML = (fullText + cursor).split('\n').join('<br>');
-                    await new Promise(resolve => setTimeout(resolve, 75));
+                // For lines without colons, type at normal speed
+                for (const char of line) {
+                    fullText += char;
+                    this.technicalInfo.innerHTML = fullText.split('\n').join('<br>');
+                    await new Promise(resolve => setTimeout(resolve, labelSpeed));
                 }
             }
+            
+            fullText += '\n';
+            this.technicalInfo.innerHTML = fullText.split('\n').join('<br>');
         }
+
         return fullText;
     }
 
     async simulateSignalLock(fullText) {
         console.log('🎬 Starting signal lock simulation');
         
-        const textGlitchDuration = 6000 + Math.floor(Math.random() * 4000);
+        // Reduced glitch duration to improve responsiveness
+        const textGlitchDuration = 3000 + Math.floor(Math.random() * 2000);
         console.log(`⏱️ Glitch duration set to: ${textGlitchDuration/1000} seconds`);
         
         const startTime = Date.now();
@@ -526,20 +540,22 @@ export class LoadScreen {
                 // Reduce logo glitch intensity
                 this.glitchLogo.style.animation = 'glitchLogo 0.4s infinite';
                 
-                // Update signal status text immediately, accounting for <br> tags and whitespace
+                // Update signal status text immediately
                 const lines = this.technicalInfo.innerHTML.split('<br>');
                 const updatedLines = lines.map(line => {
-                    console.log('Checking line:', JSON.stringify(line));
                     if (line.includes('SIGNAL LOCK STATUS: ACQUIRING')) {
                         return line.replace('ACQUIRING', '<strong>ACQUIRED</strong>');
                     }
                     return line;
                 });
                 
+                // Update the display with the new status
                 this.technicalInfo.innerHTML = updatedLines.join('<br>');
                 console.log('✅ Signal lock status updated to ACQUIRED');
                 
-                resolve();
+                // Update fullText with the new content
+                fullText = updatedLines.join('\n');
+                resolve(fullText);
             }, textGlitchDuration);
 
             // Store the timer reference
@@ -593,6 +609,17 @@ export class LoadScreen {
         console.log('⌨️ Typing text...');
         const fullText = await this.typeText(text);
         console.log('✅ Technical info sequence complete');
+
+        // Update system status
+        const lines = this.technicalInfo.innerHTML.split('<br>');
+        const updatedLines = lines.map(line => {
+            if (line.includes('SYSTEM STATUS: INITIALIZING')) {
+                return line.replace('INITIALIZING', '<strong>INITIALIZED</strong>');
+            }
+            return line;
+        });
+        
+        this.technicalInfo.innerHTML = updatedLines.join('<br>');
 
         // After typing is complete, replace loading text with launch button
         this.loadingText.remove();
