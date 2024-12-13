@@ -332,15 +332,14 @@ export class LoadScreen {
         
         // Begin typing
         await this.updateTechnicalInfo(this.browserInfo, this.gpuInfo, this.screenInfo, this.audioInfo);
-        
-        // Show the launch button after signal is acquired
-        this.launchButton.style.display = 'block';
-        setTimeout(() => {
-            this.launchButton.style.opacity = '1';
-        }, 50);
     }
 
     hide() {
+        // Clear any pending timers
+        if (this._glitchTimer) {
+            clearTimeout(this._glitchTimer);
+        }
+        
         this.container.style.opacity = '0';
         setTimeout(() => {
             this.container.remove();
@@ -429,42 +428,88 @@ export class LoadScreen {
         
         for (let i = 0; i < lines.length; i++) {
             const line = lines[i];
-            for (let j = 0; j < line.length; j++) {
-                fullText += line[j];
-                this.technicalInfo.innerHTML = (fullText + cursor).split('\n').join('<br>');
-                // Reduced typing speed by 25% (was 30-70ms, now 22.5-52.5ms)
-                await new Promise(resolve => setTimeout(resolve, 22.5 + Math.random() * 30));
-            }
-            if (i < lines.length - 1) {
+            
+            // Start signal lock simulation after typing "SIGNAL LOCK STATUS: ACQUIRING"
+            if (line.includes('SIGNAL LOCK STATUS: ACQUIRING')) {
+                for (let j = 0; j < line.length; j++) {
+                    fullText += line[j];
+                    this.technicalInfo.innerHTML = (fullText + cursor).split('\n').join('<br>');
+                    await new Promise(resolve => setTimeout(resolve, 22.5 + Math.random() * 30));
+                }
                 fullText += '\n';
                 this.technicalInfo.innerHTML = (fullText + cursor).split('\n').join('<br>');
-                // Reduced end-of-line pause by 25% (was 100ms, now 75ms)
-                await new Promise(resolve => setTimeout(resolve, 75));
+                
+                // Start the signal lock simulation here
+                this.simulateSignalLock(fullText).then(() => {
+                    console.log('Signal lock simulation complete');
+                });
+            }
+            
+            // Continue typing the rest of the text
+            if (!line.includes('SIGNAL LOCK STATUS:')) {
+                for (let j = 0; j < line.length; j++) {
+                    fullText += line[j];
+                    this.technicalInfo.innerHTML = (fullText + cursor).split('\n').join('<br>');
+                    await new Promise(resolve => setTimeout(resolve, 22.5 + Math.random() * 30));
+                }
+                if (i < lines.length - 1) {
+                    fullText += '\n';
+                    this.technicalInfo.innerHTML = (fullText + cursor).split('\n').join('<br>');
+                    await new Promise(resolve => setTimeout(resolve, 75));
+                }
             }
         }
         return fullText;
     }
 
     async simulateSignalLock(fullText) {
-        // Random duration between 4-10 seconds for text glitch
-        const textGlitchDuration = 4000 + Math.random() * 6000;
+        // Add logging to track timing
+        console.log('🎬 Starting signal lock simulation');
         
-        // Stop text glitch after its duration
-        setTimeout(() => {
-            this.technicalInfo.style.animation = 'none';
-            
-            // Replace the "ACQUIRING" text with "<strong>ACQUIRED</strong>"
-            const updatedText = this.technicalInfo.innerHTML.replace(
-                'SIGNAL LOCK STATUS: ACQUIRING',
-                'SIGNAL LOCK STATUS: <strong>ACQUIRED</strong>'
-            );
-            
-            // Update the display
-            this.technicalInfo.innerHTML = updatedText;
-        }, textGlitchDuration);
+        // Random duration between 6-10 seconds for text glitch
+        const textGlitchDuration = 6000 + Math.floor(Math.random() * 4000);
+        console.log(`⏱️ Glitch duration set to: ${textGlitchDuration/1000} seconds`);
+        
+        const startTime = Date.now();
+        
+        return new Promise(resolve => {
+            const glitchTimer = setTimeout(() => {
+                const actualDuration = (Date.now() - startTime) / 1000;
+                console.log(`✨ Glitch effect completed after ${actualDuration} seconds`);
+                
+                // Stop text glitch
+                this.technicalInfo.style.animation = 'none';
+                
+                // Reduce logo glitch intensity
+                this.glitchLogo.style.animation = 'glitchLogo 0.4s infinite';
+                
+                // Update signal status text
+                const updatedText = this.technicalInfo.innerHTML.replace(
+                    'SIGNAL LOCK STATUS: ACQUIRING',
+                    'SIGNAL LOCK STATUS: <strong>ACQUIRED</strong>'
+                );
+                
+                this.technicalInfo.innerHTML = updatedText;
+                
+                // Show launch button
+                if (this.launchButton) {
+                    this.launchButton.style.display = 'block';
+                    requestAnimationFrame(() => {
+                        this.launchButton.style.opacity = '1';
+                    });
+                }
+                
+                resolve();
+            }, textGlitchDuration);
+
+            // Store the timer reference
+            this._glitchTimer = glitchTimer;
+        });
     }
 
     async updateTechnicalInfo(browserInfo, gpuInfo, screenInfo, audioInfo) {
+        console.log('📝 Starting to type technical info...');
+        
         const memoryInfo = (() => {
             if (performance?.memory) {
                 const totalMemGB = navigator.deviceMemory || 
@@ -511,10 +556,9 @@ export class LoadScreen {
         this.technicalInfo.innerHTML = '';
         
         // Type out the text
+        console.log('⌨️ Typing text...');
         const fullText = await this.typeText(text);
-        
-        // Start the signal lock simulation after typing is complete
-        await this.simulateSignalLock(fullText);
+        console.log('✅ Technical info sequence complete');
     }
 
     async startCountdown() {

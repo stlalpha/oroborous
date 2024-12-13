@@ -30,10 +30,11 @@ class Demo {
             }
         };
         
-        // Create load screen first
-        this.loadScreen = new LoadScreen(() => {
+        console.log('🎬 Creating load screen...');
+        // Create load screen first with async initialization
+        this.loadScreen = new LoadScreen(async () => {
             console.log('🚀 Load screen callback triggered');
-            this.initialize();
+            await this.initialize();
         });
     }
 
