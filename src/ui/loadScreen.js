@@ -288,7 +288,7 @@ export class LoadScreen {
         const gpuInfo = this.getGPUInfo();
         const screenInfo = this.getScreenInfo();
         const audioInfo = this.getAudioInfo();
-        this.updateTechnicalInfo(browserInfo, gpuInfo, screenInfo, audioInfo);
+        await this.updateTechnicalInfo(browserInfo, gpuInfo, screenInfo, audioInfo);
         
         this.launchButton.style.display = 'block';
         setTimeout(() => {
@@ -370,7 +370,30 @@ export class LoadScreen {
         }
     }
 
-    updateTechnicalInfo(browserInfo, gpuInfo, screenInfo, audioInfo) {
+    async typeText(text) {
+        const lines = text.split('\n').map(line => line.trim());
+        let fullText = '';
+        const cursor = '█';
+        
+        for (let i = 0; i < lines.length; i++) {
+            const line = lines[i];
+            for (let j = 0; j < line.length; j++) {
+                fullText += line[j];
+                this.technicalInfo.innerHTML = (fullText + cursor).split('\n').join('<br>');
+                // Random typing speed between 30-70ms
+                await new Promise(resolve => setTimeout(resolve, 30 + Math.random() * 40));
+            }
+            if (i < lines.length - 1) {
+                fullText += '\n';
+                this.technicalInfo.innerHTML = (fullText + cursor).split('\n').join('<br>');
+                // Longer pause at end of line
+                await new Promise(resolve => setTimeout(resolve, 100));
+            }
+        }
+        return fullText;
+    }
+
+    async updateTechnicalInfo(browserInfo, gpuInfo, screenInfo, audioInfo) {
         const memoryInfo = performance?.memory ? 
             `MEMORY: ${Math.round(performance.memory.usedJSHeapSize / 1048576)}MB / ${Math.round(performance.memory.jsHeapSizeLimit / 1048576)}MB` :
             'MEMORY: NOT AVAILABLE';
@@ -378,7 +401,7 @@ export class LoadScreen {
         const canvasWidth = this.canvas?.width || window.innerWidth;
         const canvasHeight = this.canvas?.height || window.innerHeight;
 
-        this.technicalInfo.innerHTML = `
+        const text = `
             SMPTE COLOR BARS
             PIRATE MIND STATION TEST PATTERN
             PLEASE STAND BY...
@@ -404,6 +427,12 @@ export class LoadScreen {
             COLOR BAR SIGNAL: ACTIVE
             FREQUENCY: 60Hz
             RESOLUTION: ${canvasWidth}x${canvasHeight}
-        `.split('\n').map(line => line.trim()).join('<br>');
+        `;
+
+        // Clear existing content
+        this.technicalInfo.innerHTML = '';
+        
+        // Type out the text
+        await this.typeText(text);
     }
 } 
