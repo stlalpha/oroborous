@@ -1,16 +1,11 @@
-console.log('🚀 main.js loaded');
-
-console.log('📦 Importing modules...');
 import { PlasmaEffect } from './effects/plasma.js';
 import { TextScroller } from './ui/scroller.js';
 import { AudioManager } from './audio/audioManager.js';
 import { CopperBars } from './effects/copperBars.js';
 import { VectorBalls } from './effects/vectorBalls.js';
 import { LoadScreen } from './ui/loadScreen.js';
-console.log('📦 Modules imported successfully');
 
-// Add immediate debug
-console.log('🔍 CopperBars class available:', typeof CopperBars);
+console.log('📦 Modules imported successfully');
 
 class Demo {
     constructor() {
@@ -42,11 +37,8 @@ class Demo {
         try {
             console.log('🎵 Setting up background music...');
             const musicPath = './assets/music/background-track.mp3';
-            console.log('🎵 Music path:', musicPath);
             await this.audioManager.loadTrack(musicPath);
-            console.log('🎵 Track loaded, setting volume...');
             this.audioManager.setVolume(0.5);
-            console.log('🎵 Starting playback...');
             this.audioManager.play();
         } catch (error) {
             console.error('🔴 Error in setupBackgroundMusic:', error);

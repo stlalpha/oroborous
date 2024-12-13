@@ -471,7 +471,7 @@ export class LoadScreen {
         for (let i = 0; i < lines.length; i++) {
             const line = lines[i];
             
-            // Start signal lock simulation after typing "SIGNAL LOCK STATUS: ACQUIRING"
+            // If this is the signal lock line, type it out and then wait for simulation
             if (line.includes('SIGNAL LOCK STATUS: ACQUIRING')) {
                 for (let j = 0; j < line.length; j++) {
                     fullText += line[j];
@@ -481,14 +481,17 @@ export class LoadScreen {
                 fullText += '\n';
                 this.technicalInfo.innerHTML = (fullText + cursor).split('\n').join('<br>');
                 
-                // Start the signal lock simulation here
-                this.simulateSignalLock(fullText).then(() => {
-                    console.log('Signal lock simulation complete');
-                });
-            }
-            
-            // Continue typing the rest of the text
-            if (!line.includes('SIGNAL LOCK STATUS:')) {
+                // Start the signal lock simulation and wait for it
+                await this.simulateSignalLock(fullText);
+                
+                // Update the line in fullText after simulation completes
+                const lines = fullText.split('\n');
+                lines[lines.findIndex(l => l.includes('SIGNAL LOCK STATUS:'))] = 
+                    'SIGNAL LOCK STATUS: <strong>ACQUIRED</strong>';
+                fullText = lines.join('\n');
+                this.technicalInfo.innerHTML = (fullText + cursor).split('\n').join('<br>');
+            } else {
+                // Type out other lines normally
                 for (let j = 0; j < line.length; j++) {
                     fullText += line[j];
                     this.technicalInfo.innerHTML = (fullText + cursor).split('\n').join('<br>');
@@ -523,15 +526,19 @@ export class LoadScreen {
                 // Reduce logo glitch intensity
                 this.glitchLogo.style.animation = 'glitchLogo 0.4s infinite';
                 
-                // Update signal status text
-                const updatedText = this.technicalInfo.innerHTML.replace(
-                    'SIGNAL LOCK STATUS: ACQUIRING',
-                    'SIGNAL LOCK STATUS: <strong>ACQUIRED</strong>'
-                );
+                // Update signal status text immediately, accounting for <br> tags and whitespace
+                const lines = this.technicalInfo.innerHTML.split('<br>');
+                const updatedLines = lines.map(line => {
+                    console.log('Checking line:', JSON.stringify(line));
+                    if (line.includes('SIGNAL LOCK STATUS: ACQUIRING')) {
+                        return line.replace('ACQUIRING', '<strong>ACQUIRED</strong>');
+                    }
+                    return line;
+                });
                 
-                this.technicalInfo.innerHTML = updatedText;
+                this.technicalInfo.innerHTML = updatedLines.join('<br>');
+                console.log('✅ Signal lock status updated to ACQUIRED');
                 
-                // Don't show launch button yet - wait for typing to complete
                 resolve();
             }, textGlitchDuration);
 
@@ -558,8 +565,6 @@ export class LoadScreen {
         const text = `
             SIGNAL LOCK STATUS: ACQUIRING
             
-            SMPTE COLOR BARS
-            PIRATE MIND STATION TEST PATTERN
             PLEASE STAND BY...
             
             SYSTEM STATUS: ${this.systemStatus}
@@ -575,10 +580,6 @@ export class LoadScreen {
             DISPLAY: ${screenInfo.width}x${screenInfo.height}
             COLOR DEPTH: ${screenInfo.colorDepth}-bit
             PIXEL RATIO: ${screenInfo.pixelRatio}x
-            
-            AUDIO SAMPLE RATE: ${audioInfo.sampleRate}
-            AUDIO CHANNELS: ${audioInfo.maxChannels}
-            AUDIO STATE: ${audioInfo.state}
             
             COLOR BAR SIGNAL: ACTIVE
             FREQUENCY: 60Hz
