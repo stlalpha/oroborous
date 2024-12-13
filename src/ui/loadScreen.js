@@ -489,7 +489,6 @@ export class LoadScreen {
         const canvasHeight = this.canvas?.height || window.innerHeight;
 
         const text = `
-            ATTEMPTING TO ACQUIRE SIGNAL LOCK...
             SIGNAL LOCK STATUS: ACQUIRING
             
             SMPTE COLOR BARS
