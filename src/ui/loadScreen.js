@@ -1,4 +1,11 @@
+import { amigaPalette } from '../utils/amigaPalette.js';
+
 export class LoadScreen {
+    static SPEED_TEST_FILE = 'data:application/octet-stream;base64,'.concat(
+        // 100KB of random data
+        btoa(Array(100 * 1024).fill().map(() => String.fromCharCode(Math.random() * 256)).join(''))
+    );
+
     constructor(onLaunch) {
         const crtContainer = document.querySelector('.crt-container');
         
@@ -36,121 +43,80 @@ export class LoadScreen {
         `;
         this.container.appendChild(this.canvas);
 
-        // Create SMPTE color bars
+        // Create SMPTE color bars container
         const colorBars = document.createElement('div');
         colorBars.style.cssText = `
-            position: relative;
-            width: 100%;
-            height: 67%;
-            display: flex;
-        `;
-
-        // Main SMPTE bars (75% white)
-        const mainColors = [
-            '#FFFFFF', // White (100%)
-            '#FFFF00', // Yellow
-            '#00FFFF', // Cyan
-            '#00FF00', // Green
-            '#FF00FF', // Magenta
-            '#FF0000', // Red
-            '#0000FF'  // Blue
-        ];
-
-        mainColors.forEach(color => {
-            const bar = document.createElement('div');
-            bar.style.cssText = `
-                flex: 1;
-                background-color: ${color};
-            `;
-            colorBars.appendChild(bar);
-        });
-
-        // Create reverse bars section (bottom third of main bars)
-        const reverseSection = document.createElement('div');
-        reverseSection.style.cssText = `
             position: absolute;
-            bottom: 0;
+            top: 0;
             left: 0;
             width: 100%;
-            height: 33%;
-            display: flex;
+            height: 100%;
+            z-index: 1;
         `;
 
-        // Reverse pattern colors
-        const reverseColors = [
-            '#0000FF', // Blue
-            '#000000', // Black
-            '#FF00FF', // Magenta
-            '#000000', // Black
-            '#00FFFF', // Cyan
-            '#000000', // Black
-            '#FFFFFF'  // White
-        ];
-
-        reverseColors.forEach(color => {
-            const bar = document.createElement('div');
-            bar.style.cssText = `
-                flex: 1;
-                background-color: ${color};
-            `;
-            reverseSection.appendChild(bar);
-        });
-
-        colorBars.appendChild(reverseSection);
-
-        // Create -I, White, +Q, Black section
-        const iqSection = document.createElement('div');
-        iqSection.style.cssText = `
+        // Main bars section
+        const mainSection = document.createElement('div');
+        mainSection.style.cssText = `
+            position: absolute;
+            top: 0;
+            left: 0;
             width: 100%;
-            height: 8%;
+            height: 75%;
             display: flex;
         `;
 
-        const iqColors = [
-            '#4A0088', // -I
-            '#FFFFFF', // White
-            '#88007F', // +Q
-            '#000000', // Black
-            '#000000', // Black
-            '#000000', // Black
-            '#000000'  // Black
+        // Main colors
+        const mainColors = [
+            '#FFFFFF',    // White
+            '#FFFF00',    // Yellow
+            '#00FFFF',    // Cyan
+            '#00FF00',    // Green
+            '#FF00FF',    // Magenta
+            '#FF0000',    // Red
+            '#0000FF'     // Blue
         ];
 
-        iqColors.forEach(color => {
+        // Calculate bar width
+        const barWidth = 100 / mainColors.length; // Width percentage for each bar
+
+        mainColors.forEach((color, index) => {
             const bar = document.createElement('div');
             bar.style.cssText = `
                 flex: 1;
                 background-color: ${color};
             `;
-            iqSection.appendChild(bar);
+            mainSection.appendChild(bar);
         });
 
-        // Create pluge and black section
-        const plugeSection = document.createElement('div');
-        plugeSection.style.cssText = `
+        // Black band
+        const blackBand = document.createElement('div');
+        blackBand.style.cssText = `
+            position: absolute;
+            top: 75%;
+            left: 0;
             width: 100%;
-            height: 12%;
-            display: flex;
+            height: 25%;
+            background-color: #000000;
         `;
 
-        const plugeColors = [
-            '#161616', // 3.5% below black
-            '#000000', // Black
-            '#1A1A1A', // 3.5% above black
-            '#000000', // Black
-            '#FFFFFF', // White
-            '#000000', // Black
-            '#000000'  // Black
-        ];
+        // White patch
+        const whitePatch = document.createElement('div');
+        whitePatch.style.cssText = `
+            position: absolute;
+            top: 75%;
+            left: ${barWidth * 1.5}%;
+            width: ${barWidth}%;
+            height: 18.75%;
+            background-color: #FFFFFF;
+        `;
 
-        plugeColors.forEach(color => {
-            const bar = document.createElement('div');
-            bar.style.cssText = `
-                flex: 1;
-                background-color: ${color};
-            `;
-            plugeSection.appendChild(bar);
-        });
+        // Add elements in correct order
+        colorBars.appendChild(mainSection);
+        colorBars.appendChild(blackBand);
+        colorBars.appendChild(whitePatch);
+
+        // Add color bars before other elements
+        this.container.appendChild(colorBars);
 
         // Create technical info element
         this.technicalInfo = document.createElement('div');
@@ -355,9 +321,6 @@ export class LoadScreen {
         this.container.appendChild(this.loadingText);
 
         // Assemble all elements
-        this.container.appendChild(colorBars);
-        this.container.appendChild(iqSection);
-        this.container.appendChild(plugeSection);
         this.container.appendChild(this.technicalInfo);
         this.container.appendChild(this.glitchLogo);
         this.container.appendChild(this.launchButton);
@@ -582,6 +545,10 @@ export class LoadScreen {
             return 'MEMORY: NOT AVAILABLE';
         })();
 
+        // Define our virtual Amiga resolution and colors
+        const amigaWidth = 320;
+        const amigaHeight = 256;
+        const amigaColors = 32; // Standard Amiga OCS/ECS
         const canvasWidth = this.canvas?.width || window.innerWidth;
         const canvasHeight = this.canvas?.height || window.innerHeight;
 
@@ -600,13 +567,17 @@ export class LoadScreen {
             GPU VENDOR: ${gpuInfo.vendor}
             GPU RENDERER: ${gpuInfo.renderer}
             
-            DISPLAY: ${screenInfo.width}x${screenInfo.height}
+            NATIVE DISPLAY:
+            RESOLUTION: ${screenInfo.width}x${screenInfo.height}
             COLOR DEPTH: ${screenInfo.colorDepth}-bit
             PIXEL RATIO: ${screenInfo.pixelRatio}x
             
+            VIRTUAL DISPLAY:
+            AMIGA MODE: ${amigaWidth}x${amigaHeight}
+            SCALED TO: ${canvasWidth}x${canvasHeight}
+            COLOR DEPTH: ${amigaColors} COLORS
+            REFRESH RATE: 60Hz
             COLOR BAR SIGNAL: ACTIVE
-            FREQUENCY: 60Hz
-            RESOLUTION: ${canvasWidth}x${canvasHeight}
         `;
 
         // Clear existing content
@@ -650,5 +621,116 @@ export class LoadScreen {
         const screenInfo = this.getScreenInfo();
         const audioInfo = this.getAudioInfo();
         await this.updateTechnicalInfo(browserInfo, gpuInfo, screenInfo, audioInfo);
+    }
+
+    getBrowserCapabilities() {
+        return {
+            webgl2: !!window.WebGL2RenderingContext,
+            webgpu: 'gpu' in window,
+            webAssembly: typeof WebAssembly === 'object',
+            sharedArrayBuffer: typeof SharedArrayBuffer === 'function',
+            serviceWorker: 'serviceWorker' in navigator,
+            bluetooth: 'bluetooth' in navigator,
+            touchscreen: 'ontouchstart' in window,
+            battery: 'getBattery' in navigator,
+            virtualReality: 'xr' in navigator,
+            networkType: navigator.connection?.type || 'Unknown',
+            networkSpeed: navigator.connection?.downlink || 'Unknown',
+            maxTouchPoints: navigator.maxTouchPoints,
+            deviceMemory: navigator.deviceMemory || 'Unknown',
+            doNotTrack: navigator.doNotTrack || 'Unknown',
+            cookiesEnabled: navigator.cookieEnabled,
+            pdfViewerEnabled: navigator.pdfViewerEnabled,
+            darkMode: window.matchMedia('(prefers-color-scheme: dark)').matches,
+            reducedMotion: window.matchMedia('(prefers-reduced-motion: reduce)').matches,
+        };
+    }
+
+    getSystemTimings() {
+        const timing = performance.timing;
+        return {
+            pageLoadTime: timing.loadEventEnd - timing.navigationStart,
+            domReadyTime: timing.domComplete - timing.domLoading,
+            renderTime: timing.domComplete - timing.domContentLoadedEventStart
+        };
+    }
+
+    getGPUDetails() {
+        const canvas = document.createElement('canvas');
+        const gl = canvas.getContext('webgl');
+        if (!gl) return {};
+        
+        return {
+            vendor: gl.getParameter(gl.VENDOR),
+            renderer: gl.getParameter(gl.RENDERER),
+            version: gl.getParameter(gl.VERSION),
+            shadingLanguageVersion: gl.getParameter(gl.SHADING_LANGUAGE_VERSION),
+            maxTextureSize: gl.getParameter(gl.MAX_TEXTURE_SIZE),
+            maxViewportDims: gl.getParameter(gl.MAX_VIEWPORT_DIMS),
+            maxRenderbufferSize: gl.getParameter(gl.MAX_RENDERBUFFER_SIZE)
+        };
+    }
+
+    getMediaCapabilities() {
+        return {
+            speakers: typeof navigator.mediaDevices !== 'undefined',
+            microphone: typeof navigator.mediaDevices !== 'undefined',
+            camera: typeof navigator.mediaDevices !== 'undefined',
+            midi: 'requestMIDIAccess' in navigator,
+            gamepad: 'getGamepads' in navigator
+        };
+    }
+
+    getNetworkInfo() {
+        const connection = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+        
+        const info = {
+            type: 'API NOT SUPPORTED',
+            downlinkSpeed: 'API NOT SUPPORTED',
+            rtt: 'API NOT SUPPORTED',
+            effectiveType: 'API NOT SUPPORTED',
+            saveData: false
+        };
+
+        if (connection) {
+            // More descriptive connection types
+            const connectionTypes = {
+                bluetooth: 'BLUETOOTH',
+                cellular: 'CELLULAR',
+                ethernet: 'ETHERNET',
+                none: 'NO CONNECTION',
+                wifi: 'WIFI',
+                wimax: 'WIMAX',
+                other: 'OTHER',
+                unknown: 'UNIDENTIFIED'
+            };
+
+            info.type = connectionTypes[connection.type] || 'UNIDENTIFIED';
+            info.downlinkSpeed = connection.downlink ? `${connection.downlink} Mbps` : 'NOT AVAILABLE';
+            info.rtt = connection.rtt ? `${connection.rtt}ms` : 'NOT AVAILABLE';
+            info.effectiveType = connection.effectiveType ? connection.effectiveType.toUpperCase() : 'NOT AVAILABLE';
+            info.saveData = connection.saveData || false;
+        }
+
+        return info;
+    }
+
+    // Optional: Add a more accurate speed test
+    async measureNetworkSpeed() {
+        const startTime = performance.now();
+        try {
+            const response = await fetch(LoadScreen.SPEED_TEST_FILE);
+            const data = await response.blob();
+            const endTime = performance.now();
+            
+            const durationInSeconds = (endTime - startTime) / 1000;
+            const fileSizeInBits = data.size * 8;
+            const speedInMbps = (fileSizeInBits / durationInSeconds / 1000000).toFixed(2);
+            
+            return `${speedInMbps} Mbps`;
+        } catch (error) {
+            console.warn('Speed test failed:', error);
+            return 'Test Failed';
+        }
     }
 } 

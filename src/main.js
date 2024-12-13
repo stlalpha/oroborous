@@ -4,6 +4,7 @@ import { AudioManager } from './audio/audioManager.js';
 import { CopperBars } from './effects/copperBars.js';
 import { VectorBalls } from './effects/vectorBalls.js';
 import { LoadScreen } from './ui/loadScreen.js';
+import { amigaPalette } from './utils/amigaPalette.js';
 
 console.log('📦 Modules imported successfully');
 
@@ -24,6 +25,16 @@ class Demo {
                 name: 'vectorBalls'
             }
         };
+        
+        // Set up Amiga display constraints
+        this.displayConfig = {
+            width: 320,
+            height: 256,
+            colors: 32  // Standard Amiga OCS/ECS limit
+        };
+        
+        // Configure palette for demo
+        amigaPalette.setMaxColors(this.displayConfig.colors);
         
         console.log('🎬 Creating load screen...');
         // Create load screen first with async initialization
