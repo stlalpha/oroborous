@@ -327,6 +327,13 @@ export class LoadScreen {
                                0 0 20px #00ffff;
                 }
             }
+
+            .reverse-text {
+                background: #000;
+                color: #fff;
+                padding: 0 4px;
+                font-weight: bold;
+            }
         `;
         document.head.appendChild(style);
 
@@ -544,7 +551,7 @@ export class LoadScreen {
                 const lines = this.technicalInfo.innerHTML.split('<br>');
                 const updatedLines = lines.map(line => {
                     if (line.includes('SIGNAL LOCK STATUS: ACQUIRING')) {
-                        return line.replace('ACQUIRING', '<strong>ACQUIRED</strong>');
+                        return line.replace('ACQUIRING', '<span class="reverse-text">ACQUIRED</span>');
                     }
                     return line;
                 });
@@ -579,9 +586,9 @@ export class LoadScreen {
         const canvasHeight = this.canvas?.height || window.innerHeight;
 
         const text = `
-            SIGNAL LOCK STATUS: ACQUIRING
-            
             PLEASE STAND BY...
+            
+            SIGNAL LOCK STATUS: ACQUIRING
             
             SYSTEM STATUS: ${this.systemStatus}
             
@@ -610,11 +617,15 @@ export class LoadScreen {
         const fullText = await this.typeText(text);
         console.log('✅ Technical info sequence complete');
 
-        // Update system status
+        // Update system status and remove "PLEASE STAND BY..." while preserving spacing
         const lines = this.technicalInfo.innerHTML.split('<br>');
         const updatedLines = lines.map(line => {
             if (line.includes('SYSTEM STATUS: INITIALIZING')) {
-                return line.replace('INITIALIZING', '<strong>INITIALIZED</strong>');
+                return line.replace('INITIALIZING', '<span class="reverse-text">INITIALIZED</span>');
+            }
+            // Replace "PLEASE STAND BY..." line with empty string but keep the line
+            if (line.includes('PLEASE STAND BY')) {
+                return line.replace('PLEASE STAND BY...', '');
             }
             return line;
         });
