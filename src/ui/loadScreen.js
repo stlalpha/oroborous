@@ -21,6 +21,21 @@ export class LoadScreen {
             overflow: hidden;
         `;
 
+        // Create and store canvas reference
+        this.canvas = document.createElement('canvas');
+        this.canvas.width = crtContainer.offsetWidth;
+        this.canvas.height = crtContainer.offsetHeight;
+        this.canvas.id = 'loadScreenCanvas';
+        this.canvas.style.cssText = `
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        `;
+        this.container.appendChild(this.canvas);
+
         // Create SMPTE color bars
         const colorBars = document.createElement('div');
         colorBars.style.cssText = `
@@ -152,15 +167,15 @@ export class LoadScreen {
             text-shadow: 2px 2px 0px #000;
             z-index: 2;
         `;
-        this.technicalInfo.innerHTML = `
-            SMPTE COLOR BARS
-            PIRATE MIND STATION TEST PATTERN
-            PLEASE STAND BY...
-            COLOR BAR SIGNAL: ACTIVE
-            FREQUENCY: 60Hz
-            RESOLUTION: ${crtContainer.offsetWidth}x${crtContainer.offsetHeight}
-            SYSTEM STATUS: INITIALIZING
-        `.split('\n').map(line => line.trim()).join('<br>');
+
+        // Add system info gathering
+        const browserInfo = this.getBrowserInfo();
+        const gpuInfo = this.getGPUInfo();
+        const screenInfo = this.getScreenInfo();
+        const audioInfo = this.getAudioInfo();
+
+        this.systemStatus = "INITIALIZING";
+        this.updateTechnicalInfo(browserInfo, gpuInfo, screenInfo, audioInfo);
 
         // Create glitch text effect
         const glitchLogo = document.createElement('div');
@@ -267,6 +282,14 @@ export class LoadScreen {
 
     async startCountdown() {
         await new Promise(resolve => setTimeout(resolve, 3000));
+        this.systemStatus = "INITIALIZED";
+        // Update the technical info with new status
+        const browserInfo = this.getBrowserInfo();
+        const gpuInfo = this.getGPUInfo();
+        const screenInfo = this.getScreenInfo();
+        const audioInfo = this.getAudioInfo();
+        this.updateTechnicalInfo(browserInfo, gpuInfo, screenInfo, audioInfo);
+        
         this.launchButton.style.display = 'block';
         setTimeout(() => {
             this.launchButton.style.opacity = '1';
@@ -278,5 +301,109 @@ export class LoadScreen {
         setTimeout(() => {
             this.container.remove();
         }, 1000);
+    }
+
+    getBrowserInfo() {
+        const ua = navigator.userAgent;
+        const browser = {
+            name: 'Unknown',
+            version: 'Unknown',
+            platform: navigator.platform,
+            language: navigator.language,
+            cores: navigator.hardwareConcurrency || 'Unknown'
+        };
+
+        if (ua.includes('Firefox/')) {
+            browser.name = 'Firefox';
+            browser.version = ua.split('Firefox/')[1];
+        } else if (ua.includes('Chrome/')) {
+            browser.name = 'Chrome';
+            browser.version = ua.split('Chrome/')[1].split(' ')[0];
+        } else if (ua.includes('Safari/')) {
+            browser.name = 'Safari';
+            browser.version = ua.split('Version/')[1].split(' ')[0];
+        }
+
+        return browser;
+    }
+
+    getGPUInfo() {
+        const canvas = document.createElement('canvas');
+        const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+        
+        if (!gl) {
+            return { renderer: 'Unknown', vendor: 'Unknown' };
+        }
+
+        const debugInfo = gl.getExtension('WEBGL_debug_renderer_info');
+        return {
+            renderer: debugInfo ? gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL) : 'Unknown',
+            vendor: debugInfo ? gl.getParameter(debugInfo.UNMASKED_VENDOR_WEBGL) : 'Unknown'
+        };
+    }
+
+    getScreenInfo() {
+        return {
+            width: window.screen.width,
+            height: window.screen.height,
+            colorDepth: window.screen.colorDepth,
+            pixelRatio: window.devicePixelRatio,
+            orientation: screen.orientation?.type || 'Unknown'
+        };
+    }
+
+    getAudioInfo() {
+        try {
+            // Only create AudioContext when needed and after user interaction
+            return {
+                sampleRate: 'Pending user interaction',
+                state: 'Suspended',
+                maxChannels: 'Unknown'
+            };
+        } catch (error) {
+            console.warn('Audio info not available:', error);
+            return {
+                sampleRate: 'Not available',
+                state: 'Not available',
+                maxChannels: 'Not available'
+            };
+        }
+    }
+
+    updateTechnicalInfo(browserInfo, gpuInfo, screenInfo, audioInfo) {
+        const memoryInfo = performance?.memory ? 
+            `MEMORY: ${Math.round(performance.memory.usedJSHeapSize / 1048576)}MB / ${Math.round(performance.memory.jsHeapSizeLimit / 1048576)}MB` :
+            'MEMORY: NOT AVAILABLE';
+
+        const canvasWidth = this.canvas?.width || window.innerWidth;
+        const canvasHeight = this.canvas?.height || window.innerHeight;
+
+        this.technicalInfo.innerHTML = `
+            SMPTE COLOR BARS
+            PIRATE MIND STATION TEST PATTERN
+            PLEASE STAND BY...
+            
+            SYSTEM STATUS: ${this.systemStatus}
+            
+            BROWSER: ${browserInfo.name} ${browserInfo.version}
+            PLATFORM: ${browserInfo.platform}
+            CPU CORES: ${browserInfo.cores}
+            ${memoryInfo}
+            
+            GPU VENDOR: ${gpuInfo.vendor}
+            GPU RENDERER: ${gpuInfo.renderer}
+            
+            DISPLAY: ${screenInfo.width}x${screenInfo.height}
+            COLOR DEPTH: ${screenInfo.colorDepth}-bit
+            PIXEL RATIO: ${screenInfo.pixelRatio}x
+            
+            AUDIO SAMPLE RATE: ${audioInfo.sampleRate}
+            AUDIO CHANNELS: ${audioInfo.maxChannels}
+            AUDIO STATE: ${audioInfo.state}
+            
+            COLOR BAR SIGNAL: ACTIVE
+            FREQUENCY: 60Hz
+            RESOLUTION: ${canvasWidth}x${canvasHeight}
+        `.split('\n').map(line => line.trim()).join('<br>');
     }
 } 
