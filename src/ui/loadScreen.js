@@ -327,26 +327,13 @@ export class LoadScreen {
         this.glitchLogo.style.animation = 'glitchLogo 0.2s infinite';
         this.technicalInfo.style.animation = 'glitch 0.2s infinite';
         
-        // 2. Wait 2 seconds
+        // Wait 2 seconds
         await new Promise(resolve => setTimeout(resolve, 2000));
         
-        // 3. Begin typing
+        // Begin typing
         await this.updateTechnicalInfo(this.browserInfo, this.gpuInfo, this.screenInfo, this.audioInfo);
         
-        // 4. Start the countdown for the launch button
-        this.startCountdown();
-    }
-
-    async startCountdown() {
-        await new Promise(resolve => setTimeout(resolve, 3000));
-        this.systemStatus = "INITIALIZED";
-        // Update the technical info with new status
-        const browserInfo = this.getBrowserInfo();
-        const gpuInfo = this.getGPUInfo();
-        const screenInfo = this.getScreenInfo();
-        const audioInfo = this.getAudioInfo();
-        await this.updateTechnicalInfo(browserInfo, gpuInfo, screenInfo, audioInfo);
-        
+        // Show the launch button after signal is acquired
         this.launchButton.style.display = 'block';
         setTimeout(() => {
             this.launchButton.style.opacity = '1';
@@ -445,34 +432,36 @@ export class LoadScreen {
             for (let j = 0; j < line.length; j++) {
                 fullText += line[j];
                 this.technicalInfo.innerHTML = (fullText + cursor).split('\n').join('<br>');
-                // Random typing speed between 30-70ms
-                await new Promise(resolve => setTimeout(resolve, 30 + Math.random() * 40));
+                // Reduced typing speed by 25% (was 30-70ms, now 22.5-52.5ms)
+                await new Promise(resolve => setTimeout(resolve, 22.5 + Math.random() * 30));
             }
             if (i < lines.length - 1) {
                 fullText += '\n';
                 this.technicalInfo.innerHTML = (fullText + cursor).split('\n').join('<br>');
-                // Longer pause at end of line
-                await new Promise(resolve => setTimeout(resolve, 100));
+                // Reduced end-of-line pause by 25% (was 100ms, now 75ms)
+                await new Promise(resolve => setTimeout(resolve, 75));
             }
         }
         return fullText;
     }
 
     async simulateSignalLock(fullText) {
-        const glitchDuration = 2000 + Math.random() * 3000;
-        await new Promise(resolve => setTimeout(resolve, glitchDuration));
+        // Random duration between 4-10 seconds for text glitch
+        const textGlitchDuration = 4000 + Math.random() * 6000;
         
-        // Stop both glitch animations
-        this.glitchLogo.style.animation = 'none';
-        this.technicalInfo.style.animation = 'none';
-        
-        // Update the signal lock status
-        const updatedText = fullText.replace(
-            'SIGNAL LOCK STATUS: ACQUIRING',
-            'SIGNAL LOCK STATUS: <strong>ACQUIRED</strong>'
-        );
-        
-        this.technicalInfo.innerHTML = updatedText;
+        // Stop text glitch after its duration
+        setTimeout(() => {
+            this.technicalInfo.style.animation = 'none';
+            
+            // Replace the "ACQUIRING" text with "<strong>ACQUIRED</strong>"
+            const updatedText = this.technicalInfo.innerHTML.replace(
+                'SIGNAL LOCK STATUS: ACQUIRING',
+                'SIGNAL LOCK STATUS: <strong>ACQUIRED</strong>'
+            );
+            
+            // Update the display
+            this.technicalInfo.innerHTML = updatedText;
+        }, textGlitchDuration);
     }
 
     async updateTechnicalInfo(browserInfo, gpuInfo, screenInfo, audioInfo) {
@@ -526,5 +515,15 @@ export class LoadScreen {
         
         // Start the signal lock simulation after typing is complete
         await this.simulateSignalLock(fullText);
+    }
+
+    async startCountdown() {
+        this.systemStatus = "INITIALIZED";
+        // Update the technical info with new status
+        const browserInfo = this.getBrowserInfo();
+        const gpuInfo = this.getGPUInfo();
+        const screenInfo = this.getScreenInfo();
+        const audioInfo = this.getAudioInfo();
+        await this.updateTechnicalInfo(browserInfo, gpuInfo, screenInfo, audioInfo);
     }
 } 
